@@ -22,26 +22,6 @@ namespace MethodCallCommand.Tests
         }
 
         [Test]
-        public void TestParseIdentifierAndString()
-        {
-            var segments = CommandParser.Parse(@"hello ""world""").ToArray();
-            Assert.AreEqual(2, segments.Length);
-            Assert.AreEqual(CommandParser.SegmentType.Identifier, segments[0].Type);
-            Assert.AreEqual("hello", segments[0].Text);
-            Assert.AreEqual(CommandParser.SegmentType.String, segments[1].Type);
-            Assert.AreEqual("world", segments[1].Text);
-        }
-        
-        [Test]
-        public void TestParseString()
-        {
-            var segments = CommandParser.Parse(@"""world""").ToArray();
-            Assert.AreEqual(1, segments.Length);
-            Assert.AreEqual(CommandParser.SegmentType.String, segments[0].Type);
-            Assert.AreEqual("world", segments[0].Text);
-        }
-        
-        [Test]
         public void TestParseIdentifierAndEscapedQuote()
         {
             var segments = CommandParser.Parse(@"hello ""wor\""ld""").ToArray();
@@ -62,7 +42,7 @@ namespace MethodCallCommand.Tests
             Assert.AreEqual(CommandParser.SegmentType.String, segments[1].Type);
             Assert.AreEqual(@"wor\""ld", segments[1].Text);
         }
-        
+
         [Test]
         public void TestParseIdentifierAndEscapedSlashAndQuoteWithPostfix()
         {
@@ -81,6 +61,17 @@ namespace MethodCallCommand.Tests
         }
 
         [Test]
+        public void TestParseIdentifierAndString()
+        {
+            var segments = CommandParser.Parse(@"hello ""world""").ToArray();
+            Assert.AreEqual(2, segments.Length);
+            Assert.AreEqual(CommandParser.SegmentType.Identifier, segments[0].Type);
+            Assert.AreEqual("hello", segments[0].Text);
+            Assert.AreEqual(CommandParser.SegmentType.String, segments[1].Type);
+            Assert.AreEqual("world", segments[1].Text);
+        }
+
+        [Test]
         public void TestParseIdentifierWithWhiteSpacePostfix()
         {
             var segments = CommandParser.Parse("hello    ").ToArray();
@@ -94,6 +85,15 @@ namespace MethodCallCommand.Tests
             var segments = CommandParser.Parse("   hello").ToArray();
             Assert.AreEqual(1, segments.Length);
             Assert.AreEqual(CommandParser.SegmentType.Identifier, segments[0].Type);
+        }
+
+        [Test]
+        public void TestParseString()
+        {
+            var segments = CommandParser.Parse(@"""world""").ToArray();
+            Assert.AreEqual(1, segments.Length);
+            Assert.AreEqual(CommandParser.SegmentType.String, segments[0].Type);
+            Assert.AreEqual("world", segments[0].Text);
         }
     }
 }

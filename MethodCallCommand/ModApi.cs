@@ -7,7 +7,7 @@ namespace MethodCallCommand
 {
     public static class ModApi
     {
-        private static readonly Harmony harmony = new Harmony("org.github.measurity.methodcallcommandplugin");
+        private static readonly Harmony harmony = new("org.github.measurity.methodcallcommandplugin");
         private static Action<string> print;
 
         public static void Init()

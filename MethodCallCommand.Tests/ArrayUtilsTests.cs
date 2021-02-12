@@ -12,10 +12,10 @@ namespace MethodCallCommand.Tests
         {
             object test = new List<CommandParser.CommandSegment>
             {
-                new CommandParser.CommandSegment(CommandParser.SegmentType.String, "my string"),
-                new CommandParser.CommandSegment(CommandParser.SegmentType.Int, "42"),
+                new(CommandParser.SegmentType.String, "my string"),
+                new(CommandParser.SegmentType.Int, "42"),
                 null,
-                new CommandParser.CommandSegment(CommandParser.SegmentType.Identifier, "player")
+                new(CommandParser.SegmentType.Identifier, "player")
             };
 
             Assert.AreEqual($"my string, 42, {ArrayUtils.NullString}, player",

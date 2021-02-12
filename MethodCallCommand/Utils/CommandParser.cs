@@ -103,7 +103,7 @@ namespace MethodCallCommand.Utils
                 {
                     // TODO: Special handling when '\t', '\n' or other.
                     sb.Append(input[offset + 1]);
-                    offset+=2;
+                    offset += 2;
                     continue;
                 }
                 if (input[offset] == '"')
