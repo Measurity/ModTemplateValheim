@@ -1,14 +1,10 @@
-﻿using System;
-using System.Reflection;
-using HarmonyLib;
-using MethodCallCommand.Utils;
+﻿using HarmonyLib;
 
 namespace MethodCallCommand
 {
     public static class ModApi
     {
         private static readonly Harmony harmony = new("org.github.measurity.methodcallcommandplugin");
-        private static Action<string> print;
 
         public static void Init()
         {
@@ -26,13 +22,10 @@ namespace MethodCallCommand
         /// <param name="message">Message to print.</param>
         public static void Print(string message)
         {
-            if (print == null && Console.instance)
+            if (Console.instance)
             {
-                print = (Action<string>) typeof(Console)
-                    .GetMethod("AddString", BindingFlags.Instance | BindingFlags.NonPublic)
-                    .CreateDelegate(Console.instance);
+                Console.instance.Print(message);
             }
-            print?.Invoke(message);
         }
     }
 }

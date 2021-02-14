@@ -1,3 +1,6 @@
+# Valheim template ignores
+BuildTasks.[Dd]ll
+generated_files
 
 # Created by https://www.toptal.com/developers/gitignore/api/intellij,visualstudio,csharp,dotnetcore
 # Edit at https://www.toptal.com/developers/gitignore?templates=intellij,visualstudio,csharp,dotnetcore

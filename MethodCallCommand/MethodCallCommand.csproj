@@ -12,16 +12,9 @@
         <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
         <LangVersion>9</LangVersion>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <BuildDir>$(SolutionDir)BuildTool\bin\</BuildDir>
+        <BuildGenDir>$(BuildDir)generated_files\</BuildGenDir>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
@@ -31,30 +24,13 @@
         <DefineConstants>TRACE</DefineConstants>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
+        <Prefer32Bit>false</Prefer32Bit>
     </PropertyGroup>
     <ItemGroup>
-        <Reference Include="0Harmony, Version=2.3.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>F:\Steam Games\steamapps\common\Valheim\BepInEx\core\0Harmony.dll</HintPath>
-        </Reference>
-        <Reference Include="assembly_valheim, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>F:\Steam Games\steamapps\common\Valheim\valheim_Data\Managed\assembly_valheim.dll</HintPath>
-        </Reference>
-        <Reference Include="BepInEx, Version=5.4.5.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>F:\Steam Games\steamapps\common\Valheim\BepInEx\core\BepInEx.dll</HintPath>
-        </Reference>
         <Reference Include="System" />
         <Reference Include="System.Core" />
         <Reference Include="System.Data" />
         <Reference Include="System.Xml" />
-        <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>F:\Steam Games\steamapps\common\Valheim\valheim_Data\Managed\UnityEngine.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>F:\Steam Games\steamapps\common\Valheim\valheim_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-          <HintPath>F:\Steam Games\steamapps\common\Valheim\valheim_Data\Managed\UnityEngine.UI.dll</HintPath>
-        </Reference>
     </ItemGroup>
     <ItemGroup>
         <Compile Include="ModApi.cs" />
@@ -65,13 +41,209 @@
         <Compile Include="Utils\CommandParser.cs" />
         <Compile Include="Utils\ReflectionUtils.cs" />
     </ItemGroup>
+    <ItemGroup>
+        <ProjectReference Include="..\BuildTool\BuildTool.csproj">
+            <Project>{2080bd2a-a6f1-4a0e-bd81-ca58dc667417}</Project>
+            <Name>BuildTool</Name>
+            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+        </ProjectReference>
+    </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-    <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-         Other similar extension points exist, see Microsoft.Common.targets.
-    <Target Name="BeforeBuild">
+    
+    <!-- Copy mod to BepInEx "plugins" directory -->
+    <Target Name="InstallMod" AfterTargets="Build">
+        <ItemGroup>
+            <ModDlls Include="$(OutputPath)*.dll" />
+        </ItemGroup>
+        <Copy SourceFiles="@(ModDlls)" DestinationFolder="$(GameDir)BepInEx\plugins\$(MSBuildProjectName)\" />
     </Target>
-    <Target Name="AfterBuild">
+    
+    <!-- Prepare game for modding -->
+    <Target Name="BeforeResolveReferences">
+        <Exec LogStandardErrorAsError="true" Command="$(BuildDir)BuildTool.exe" EnvironmentVariables="SteamAppId=892970" />
     </Target>
-    -->
-
+    <!-- Include generated build properties -->
+    <Import Project="$(BuildGenDir)game.props" Condition="Exists('$(BuildGenDir)game.props')" />
+    <!-- Use (generated) dependencies from Unity game -->
+    <ItemGroup>
+        <!-- BepInEx & Harmony -->
+        <Reference Include="0Harmony">
+            <HintPath>$(GameDir)\BepInEx\core\0Harmony.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="BepInEx">
+            <HintPath>$(GameDir)\BepInEx\core\BepInEx.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <!-- Publicized assemblies -->
+        <Reference Include="assembly_valheim_publicized">
+            <HintPath>$(BuildGenDir)publicized_assemblies\assembly_valheim_publicized.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="assembly_googleanalytics_publicized">
+            <HintPath>$(BuildGenDir)publicized_assemblies\assembly_googleanalytics_publicized.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="assembly_guiutils_publicized">
+            <HintPath>$(BuildGenDir)publicized_assemblies\assembly_guiutils_publicized.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="assembly_lux_publicized">
+            <HintPath>$(BuildGenDir)publicized_assemblies\assembly_lux_publicized.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="assembly_postprocessing_publicized">
+            <HintPath>$(BuildGenDir)publicized_assemblies\assembly_postprocessing_publicized.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="assembly_simplemeshcombine_publicized">
+            <HintPath>$(BuildGenDir)publicized_assemblies\assembly_simplemeshcombine_publicized.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="assembly_steamworks_publicized">
+            <HintPath>$(BuildGenDir)publicized_assemblies\assembly_steamworks_publicized.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="assembly_sunshafts_publicized">
+            <HintPath>$(BuildGenDir)publicized_assemblies\assembly_sunshafts_publicized.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="assembly_utils_publicized">
+            <HintPath>$(BuildGenDir)publicized_assemblies\assembly_utils_publicized.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <!-- Unity Engine -->
+        <Reference Include="Mono.Security">
+            <HintPath>$(GameManagedDir)Mono.Security.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine">
+            <HintPath>$(GameManagedDir)UnityEngine.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.AIModule">
+            <HintPath>$(GameManagedDir)UnityEngine.AIModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.AndroidJNIModule">
+            <HintPath>$(GameManagedDir)UnityEngine.AndroidJNIModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.AnimationModule">
+            <HintPath>$(GameManagedDir)UnityEngine.AnimationModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.AssetBundleModule">
+            <HintPath>$(GameManagedDir)UnityEngine.AssetBundleModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.AudioModule">
+            <HintPath>$(GameManagedDir)UnityEngine.AudioModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.ClothModule">
+            <HintPath>$(GameManagedDir)UnityEngine.ClothModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.CoreModule">
+            <HintPath>$(GameManagedDir)UnityEngine.CoreModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.DirectorModule">
+            <HintPath>$(GameManagedDir)UnityEngine.DirectorModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.GridModule">
+            <HintPath>$(GameManagedDir)UnityEngine.GridModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.IMGUIModule">
+            <HintPath>$(GameManagedDir)UnityEngine.IMGUIModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.InputLegacyModule">
+            <HintPath>$(GameManagedDir)UnityEngine.InputLegacyModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.InputModule">
+            <HintPath>$(GameManagedDir)UnityEngine.InputModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.ParticleSystemModule">
+            <HintPath>$(GameManagedDir)UnityEngine.ParticleSystemModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.Physics2DModule">
+            <HintPath>$(GameManagedDir)UnityEngine.Physics2DModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.PhysicsModule">
+            <HintPath>$(GameManagedDir)UnityEngine.PhysicsModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.ScreenCaptureModule">
+            <HintPath>$(GameManagedDir)UnityEngine.ScreenCaptureModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.SharedInternalsModule">
+            <HintPath>$(GameManagedDir)UnityEngine.SharedInternalsModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.SubsystemsModule">
+            <HintPath>$(GameManagedDir)UnityEngine.SubsystemsModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.TerrainModule">
+            <HintPath>$(GameManagedDir)UnityEngine.TerrainModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.TextRenderingModule">
+            <HintPath>$(GameManagedDir)UnityEngine.TextRenderingModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.TilemapModule">
+            <HintPath>$(GameManagedDir)UnityEngine.TilemapModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UI">
+            <HintPath>$(GameManagedDir)UnityEngine.UI.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UIElementsModule">
+            <HintPath>$(GameManagedDir)UnityEngine.UIElementsModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UIModule">
+            <HintPath>$(GameManagedDir)UnityEngine.UIModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UnityAnalyticsModule">
+            <HintPath>$(GameManagedDir)UnityEngine.UnityAnalyticsModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UnityWebRequestModule">
+            <HintPath>$(GameManagedDir)UnityEngine.UnityWebRequestModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.UnityWebRequestWWWModule">
+            <HintPath>$(GameManagedDir)UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.VFXModule">
+            <HintPath>$(GameManagedDir)UnityEngine.VFXModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.VideoModule">
+            <HintPath>$(GameManagedDir)UnityEngine.VideoModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.VRModule">
+            <HintPath>$(GameManagedDir)UnityEngine.VRModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="UnityEngine.XRModule">
+            <HintPath>$(GameManagedDir)UnityEngine.XRModule.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+    </ItemGroup>
 </Project>
