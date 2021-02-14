@@ -8,9 +8,11 @@ namespace MethodCallCommand.Tests
     public class CommandParserTests
     {
         [Test]
-        public void TestParseEmpty()
+        public void TestParseEmptyOrWhiteSpace()
         {
             Assert.IsFalse(CommandParser.Parse("").Any());
+            Assert.IsFalse(CommandParser.Parse(" ").Any());
+            Assert.IsFalse(CommandParser.Parse("          ").Any());
         }
 
         [Test]
