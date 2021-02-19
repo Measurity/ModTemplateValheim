@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace BuildTool
@@ -12,20 +14,106 @@ namespace BuildTool
         private const string BepInExDownloadUrl =
             "https://github.com/BepInEx/BepInEx/releases/download/v5.4.5/BepInEx_x64_5.4.5.0.zip";
 
+        private const string UnityDoorstopDownloadUrl =
+            "https://github.com/NeighTools/UnityDoorstop/releases/download/v3.2.0.0/Doorstop_x64_3.2.0.0.zip";
+
         private const string NugetExeDownloadUrl = "https://dist.nuget.org/win-x86-commandline/v5.7.0/nuget.exe";
         private const string PublicizerGitRepo = "https://github.com/MrPurple6411/AssemblyPublicizer";
+        private const string UnityUnstrippedDllsRepo = "https://github.com/Measurity/OriginalUEngineSources";
+        private static readonly Regex iniRegex = new Regex(@"^(\w+)=(\\N+)?", RegexOptions.Compiled);
 
         private static uint SteamAppId =>
-            !uint.TryParse(Environment.GetEnvironmentVariable("SteamAppId"), out var id) ? 0 : id;
+            !uint.TryParse(Environment.GetEnvironmentVariable("SteamAppId"), out var id) ? 892970 : id;
 
         public static async Task Main(string[] args)
         {
             if (SteamAppId <= 0) throw new Exception("SteamAppId environment variable must be set and be valid");
 
-            var game = await Task.Run(() => EnsureSteamGame(SteamAppId));
-            var publicizerTask = EnsurePublicizerAsync();
-            await Task.WhenAll(EnsureBepInExAsync(game.InstallDir), publicizerTask);
-            EnsurePublicizedAssemblies(game, publicizerTask.Result);
+            var game = await Task.Factory.StartNew(() => EnsureSteamGame(SteamAppId)).ConfigureAwait(false);
+            var publicizerTask = EnsurePublicizerAsync().ContinueWith(t => Task.Factory.StartNew(() => EnsurePublicizedAssemblies(game, t.Result)));
+            await Task.WhenAll(EnsureBepInExAsync(game.InstallDir), publicizerTask, EnsureUnityDoorstopAsync(game))
+                .ConfigureAwait(false);
+            await Task.Factory.StartNew(() => EnsureUnstrippedMonoAssemblies(game));
+        }
+
+        private static async Task EnsureUnityDoorstopAsync(SteamGameData game)
+        {
+            if (File.Exists(Path.Combine(game.InstallDir, "doorstop_config.ini")))
+            {
+                Console.WriteLine("UnityDoorstop is already installed.");
+                return;
+            }
+
+            var zip = Path.Combine(Utils.GeneratedOutputDir, "unitydoorstop.zip");
+            if (!File.Exists(zip))
+            {
+                using var client = new WebClient();
+                await client.DownloadFileTaskAsync(UnityDoorstopDownloadUrl, zip);
+            }
+            // Extract UnityDoorstop zip over game files.
+            using var zipReader = ZipFile.OpenRead(zip);
+            string[] skipPaths = {"example", "readme"};
+            foreach (var entry in zipReader.Entries)
+            {
+                if (skipPaths.Any(name => entry.FullName.IndexOf(name, StringComparison.InvariantCultureIgnoreCase) >= 0)) continue;
+                
+                var targetFile = Path.Combine(game.InstallDir, entry.FullName);
+                Directory.CreateDirectory(Path.GetDirectoryName(targetFile));
+                entry.ExtractToFile(targetFile, true);
+            }
+        }
+
+        private static void EnsureUnstrippedMonoAssemblies(SteamGameData game)
+        {
+            const string unstrippedDllsFolderName = "unstripped_dlls";
+            
+            // Download or update local Unity Engine dlls repo through git.
+            var repoDir = Path.Combine(Utils.GeneratedOutputDir, "OriginalUEngineSources");
+            if (!Directory.Exists(repoDir) || !Directory.GetFiles(repoDir).Any())
+            {
+                Utils.ExecuteShell($@"git clone ""{UnityUnstrippedDllsRepo}""");
+            }
+            else
+            {
+                Utils.ExecuteShell(@"git fetch --all", repoDir);
+            }
+            // Go to git branch with the clean dlls.
+            var unityVersionUsedByGame = new Version(FileVersionInfo.GetVersionInfo(Path.Combine(game.InstallDir, "UnityPlayer.dll")).FileVersion);
+            if (Utils.ExecuteShell($@"git checkout ""{unityVersionUsedByGame.ToString(3)}""", repoDir) != 0)
+            {
+                throw new Exception(
+                    $"Failed to checkout Unity dll branch '{unityVersionUsedByGame.ToString(3)}' on repo {UnityUnstrippedDllsRepo}");
+            }
+            // Copy clean dlls to game.
+            var targetDir = Path.Combine(game.InstallDir, unstrippedDllsFolderName);
+            Directory.CreateDirectory(targetDir);
+            foreach (var sourceFile in Directory.GetFiles(repoDir, "*.dll"))
+            {
+                var targetFile = Path.Combine(targetDir, Path.GetFileName(sourceFile));
+                File.Copy(sourceFile, targetFile, true);
+            }
+            // Change UnityDoorstop configuration to use clean dlls.
+            string unityDoorstopConfig = Path.Combine(game.InstallDir, "doorstop_config.ini");
+            if (!File.Exists(unityDoorstopConfig))
+            {
+                throw new FileNotFoundException("UnityDoorstop config file not found", unityDoorstopConfig);
+            }
+            string[] configContent = File.ReadAllLines(unityDoorstopConfig);
+            bool hasChanged = false;
+            for (var i = 0; i < configContent.Length; i++)
+            {
+                var match = iniRegex.Match(configContent[i]);
+                if (!match.Success) continue;
+                if (match.Groups[1].Value != "dllSearchPathOverride") continue;
+                if (match.Groups[2].Value == unstrippedDllsFolderName) continue;
+
+                configContent[i] = $"dllSearchPathOverride={unstrippedDllsFolderName}";
+                hasChanged = true;
+            }
+            if (hasChanged)
+            {
+                File.WriteAllLines(unityDoorstopConfig, configContent);
+            }
         }
 
         private static void EnsurePublicizedAssemblies(SteamGameData game, string publicizerExe)
@@ -126,20 +214,16 @@ namespace BuildTool
             var zip = Path.Combine(Utils.GeneratedOutputDir, "bepinex.zip");
             if (!File.Exists(zip))
             {
-                using (var client = new WebClient())
-                {
-                    await client.DownloadFileTaskAsync(BepInExDownloadUrl, zip);
-                }
+                using var client = new WebClient();
+                await client.DownloadFileTaskAsync(BepInExDownloadUrl, zip);
             }
             // Extract BepInEx zip over game files.
-            using (var zipReader = ZipFile.OpenRead(zip))
+            using var zipReader = ZipFile.OpenRead(zip);
+            foreach (var entry in zipReader.Entries)
             {
-                foreach (var entry in zipReader.Entries)
-                {
-                    var targetFile = Path.Combine(gameDir, entry.FullName);
-                    Directory.CreateDirectory(Path.GetDirectoryName(targetFile));
-                    entry.ExtractToFile(targetFile, true);
-                }
+                var targetFile = Path.Combine(gameDir, entry.FullName);
+                Directory.CreateDirectory(Path.GetDirectoryName(targetFile));
+                entry.ExtractToFile(targetFile, true);
             }
         }
     }
