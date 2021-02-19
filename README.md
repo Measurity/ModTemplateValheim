@@ -11,3 +11,4 @@ Everything required is automatically installed:
 ## Requirements
  - MSBuild 16+ (installed with Visual Studio)
  - Git (used to download & build Publicizer to publicize the game DLLs)
+ - If you want C# 9 support you need https://dotnet.microsoft.com/download/dotnet/5.0 as well or change projects to use C# 8.
