@@ -6,7 +6,7 @@ Everything required is automatically installed:
  - Moves your mod into the BepInEx plugins folder.
 
 ## How to use template
- - Build project (maybe twice if IDE complains): PLAY!
+ - Rebuild solution **twice**: PLAY!
 
 ## Requirements
  - MSBuild 16+ (installed with Visual Studio)
