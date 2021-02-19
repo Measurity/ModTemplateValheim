@@ -70,11 +70,11 @@
     <ItemGroup>
         <!-- BepInEx & Harmony -->
         <Reference Include="0Harmony">
-            <HintPath>$(GameDir)\BepInEx\core\0Harmony.dll</HintPath>
+            <HintPath>$(GameDir)BepInEx\core\0Harmony.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <Reference Include="BepInEx">
-            <HintPath>$(GameDir)\BepInEx\core\BepInEx.dll</HintPath>
+            <HintPath>$(GameDir)BepInEx\core\BepInEx.dll</HintPath>
             <Private>False</Private>
         </Reference>
         <!-- Publicized assemblies -->
