@@ -1,4 +1,4 @@
-# MethodCallCommand-Valheim
+# ModTemplateValheim
 Template mod for Valheim using Bepinex that can call methods from the in-game console.
 
 ## Requirements
