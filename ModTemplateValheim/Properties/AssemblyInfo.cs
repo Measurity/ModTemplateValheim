@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("MethodCallCommand.Tests")]
+[assembly: AssemblyTitle("ModTemplateValheim")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("MethodCallCommand.Tests")]
+[assembly: AssemblyProduct("ModTemplateValheim")]
 [assembly: AssemblyCopyright("Copyright ©  2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("E483A0F3-3700-422F-8AF5-5B502E20E141")]
+[assembly: Guid("3B95EEF7-4A97-4393-91A0-3626434F3631")]
 
 // Version information for an assembly consists of the following four values:
 //

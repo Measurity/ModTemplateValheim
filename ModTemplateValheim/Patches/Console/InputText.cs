@@ -4,11 +4,14 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
-using MethodCallCommand.Utils;
+using ModTemplateValheim.Utils;
 using GameConsole = Console;
 
-namespace MethodCallCommand.Patches.Console
+namespace ModTemplateValheim.Patches.Console
 {
+    /// <summary>
+    ///     Example harmony Prefix patch for in-game console input. Replace with your patching.
+    /// </summary>
     [HarmonyPatch(typeof(GameConsole), "InputText")]
     public static class InputText
     {
@@ -23,15 +26,16 @@ namespace MethodCallCommand.Patches.Console
             var parts = CommandParser.Parse(input).ToArray();
             if (parts.Length < 3)
             {
-                ModApi.Print("call command requires at least 3 arguments: call <class> <methodName> [arg1] [arg2]");
+                console.AddString(
+                    "call command requires at least 3 arguments: call <class> <methodName> [arg1] [arg2]");
                 return false;
             }
-            ModApi.Print(input);
+            console.AddString(input);
             var targetClass = typeof(GameConsole).Assembly.GetTypes()
                 .FirstOrDefault(t => t.Name.Equals(parts[1].Text, StringComparison.InvariantCultureIgnoreCase));
             if (targetClass == null)
             {
-                ModApi.Print($"Could not find class with name '{parts[1]}'");
+                console.AddString($"Could not find class with name '{parts[1]}'");
                 return false;
             }
             var method = targetClass.GetMethods(BindingFlags.Public |
@@ -42,14 +46,14 @@ namespace MethodCallCommand.Patches.Console
                 .FirstOrDefault(m => m.Name.Equals(parts[2].Text, StringComparison.InvariantCultureIgnoreCase));
             if (method == null)
             {
-                ModApi.Print($"Could not find method '{parts[2].Text}' on class '{targetClass.FullName}'");
+                console.AddString($"Could not find method '{parts[2].Text}' on class '{targetClass.FullName}'");
                 return false;
             }
             // Parameters must match target method.
             var methodParams = method.GetParameters();
             if (methodParams.Length != parts.Length - 3) // -3 for command, class and method name args
             {
-                ModApi.Print(
+                console.AddString(
                     $"Command does not match method parameters. Expected parameter types: {string.Join(", ", methodParams.Select(p => p.ParameterType.Name))}");
                 return false;
             }
@@ -64,7 +68,7 @@ namespace MethodCallCommand.Patches.Console
                 }
                 catch (NotSupportedException)
                 {
-                    ModApi.Print($"Cannot convert argument {i + 1} '{argText}' to type of '{paramType.FullName}'");
+                    console.AddString($"Cannot convert argument {i + 1} '{argText}' to type of '{paramType.FullName}'");
                     return false;
                 }
             }
@@ -77,7 +81,7 @@ namespace MethodCallCommand.Patches.Console
                     : targetClass.GetField("m_instance", BindingFlags.Static | BindingFlags.NonPublic)?.GetValue(null);
                 if (targetInstance == null)
                 {
-                    ModApi.Print(
+                    console.AddString(
                         $"Could not call method '{method.Name}' because it's an instance method and no static instance field is defined on it");
                     return false;
                 }
@@ -87,7 +91,7 @@ namespace MethodCallCommand.Patches.Console
             var result = method.Invoke(targetInstance, methodArgsToSupply);
             if (result != null)
             {
-                ModApi.Print(string.Join(", ", ArrayUtils.ToStringArray(result)));
+                console.AddString(string.Join(", ", ArrayUtils.ToStringArray(result)));
             }
             return false;
         }

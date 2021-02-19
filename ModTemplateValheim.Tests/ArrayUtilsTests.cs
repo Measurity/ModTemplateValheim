@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using MethodCallCommand.Utils;
+using ModTemplateValheim.Utils;
 using NUnit.Framework;
 
-namespace MethodCallCommand.Tests
+namespace ModTemplateValheim.Tests
 {
     [TestFixture]
     public class ArrayUtilsTests

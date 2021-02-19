@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace MethodCallCommand.Utils
+namespace ModTemplateValheim.Utils
 {
+    /// <summary>
+    ///     Example command parser. Can be removed.
+    /// </summary>
     public static class CommandParser
     {
         public enum SegmentType

@@ -7,16 +7,14 @@
         <ProjectGuid>{3B95EEF7-4A97-4393-91A0-3626434F3631}</ProjectGuid>
         <OutputType>Library</OutputType>
         <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>MethodCallCommand</RootNamespace>
-        <AssemblyName>MethodCallCommand</AssemblyName>
+        <RootNamespace>ModTemplateValheim</RootNamespace>
+        <AssemblyName>ModTemplateValheim</AssemblyName>
         <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
         <LangVersion>9</LangVersion>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <BuildDir>$(SolutionDir)BuildTool\bin\</BuildDir>
         <BuildGenDir>$(BuildDir)generated_files\</BuildGenDir>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
         <DebugType>pdbonly</DebugType>
         <Optimize>true</Optimize>
@@ -26,6 +24,11 @@
         <WarningLevel>4</WarningLevel>
         <Prefer32Bit>false</Prefer32Bit>
     </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+      <OutputPath>bin\Debug\</OutputPath>
+        <Optimize>false</Optimize>
+        <DebugType>full</DebugType>
+    </PropertyGroup>
     <ItemGroup>
         <Reference Include="System" />
         <Reference Include="System.Core" />
@@ -33,7 +36,6 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Include="ModApi.cs" />
         <Compile Include="Mod.cs" />
         <Compile Include="Patches\Console\InputText.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />

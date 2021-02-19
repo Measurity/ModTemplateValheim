@@ -3,7 +3,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace MethodCallCommand.Utils
+namespace ModTemplateValheim.Utils
 {
     public static class ReflectionUtils
     {

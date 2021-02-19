@@ -9,13 +9,11 @@
         <ProjectTypeGuids>{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
         <OutputType>Library</OutputType>
         <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>MethodCallCommand.Tests</RootNamespace>
-        <AssemblyName>MethodCallCommand.Tests</AssemblyName>
+        <RootNamespace>ModTemplateValheim.Tests</RootNamespace>
+        <AssemblyName>ModTemplateValheim.Tests</AssemblyName>
         <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
         <LangVersion>9</LangVersion>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
         <PlatformTarget>AnyCPU</PlatformTarget>
         <DebugType>pdbonly</DebugType>
         <Optimize>true</Optimize>
@@ -25,9 +23,14 @@
         <WarningLevel>4</WarningLevel>
         <Prefer32Bit>false</Prefer32Bit>
     </PropertyGroup>
+    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+        <OutputPath>bin\Debug\</OutputPath>
+        <Optimize>false</Optimize>
+        <DebugType>full</DebugType>
+    </PropertyGroup>
     <ItemGroup>
         <Reference Include="nunit.framework, Version=3.13.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb">
-          <HintPath>..\packages\NUnit.3.13.1\lib\net40\nunit.framework.dll</HintPath>
+          <HintPath>..\packages\NUnit.3.13.1\lib\net45\nunit.framework.dll</HintPath>
           <Private>True</Private>
         </Reference>
         <Reference Include="System" />
@@ -41,9 +44,9 @@
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\MethodCallCommand\MethodCallCommand.csproj">
+      <ProjectReference Include="..\ModTemplateValheim\ModTemplateValheim.csproj">
         <Project>{3b95eef7-4a97-4393-91a0-3626434f3631}</Project>
-        <Name>MethodCallCommand</Name>
+        <Name>ModTemplateValheim</Name>
       </ProjectReference>
     </ItemGroup>
     <ItemGroup>

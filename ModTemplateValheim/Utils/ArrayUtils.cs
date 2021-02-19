@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace MethodCallCommand.Utils
+namespace ModTemplateValheim.Utils
 {
     public static class ArrayUtils
     {
