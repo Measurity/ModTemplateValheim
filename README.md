@@ -7,7 +7,7 @@ Template auto builds to following into the game automatically:
  - Moves your mod into the BepInEx plugins folder.
 
 ## How to use template
- - Build project (maybe twice to be sure): PLAY!
+ - Build project (maybe twice if IDE complains): PLAY!
 
 ## Requirements
  - MSBuild 16+ (installed with Visual Studio)
