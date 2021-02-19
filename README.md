@@ -1,11 +1,11 @@
 # MethodCallCommand-Valheim
-Valheim mod using Bepinex that can call methods from the in-game console
+Template mod for Valheim using Bepinex that can call methods from the in-game console.
 
 ## Requirements
-- [Bepinex](https://github.com/BepInEx/BepInEx/releases)
-- [Harmony](https://github.com/pardeike/Harmony)
+ - Unstripped dlls from Unity 2019.4.20 to make BepInEx work.
 
-## How to use
-- Build project (fix references to DLLs) and move mod into `..\Valheim\BepInEx\plugins`
-- Start game. Press F5 to open console.
-- Enter a command in format: `call <CLASS> <METHOD> [arg1] [arg2]` like `Console AddString "Hello, World!"`
+## How to use template
+ - Rename project
+ - Install unstripped UnityEngine.dll files
+ - Build it twice (IDE doesn't like to resolve dynamic references)
+ - Start game :D
