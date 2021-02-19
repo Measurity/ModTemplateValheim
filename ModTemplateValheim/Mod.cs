@@ -4,7 +4,7 @@ using HarmonyLib;
 
 namespace ModTemplateValheim
 {
-    [BepInPlugin("com.github.<your-github-name>.modtemplatevalheim", "ModTemplateValheim", "1.0.0.0")]
+    [BepInPlugin("com.github.measurity.modtemplatevalheim", "ModTemplateValheim", "1.0.0.0")]
     public class Mod : BaseUnityPlugin
     {
         private static readonly Harmony harmony = new(typeof(Mod).GetCustomAttributes(typeof(BepInPlugin), false)
