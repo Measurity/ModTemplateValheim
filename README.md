@@ -1,4 +1,4 @@
-# ModTemplateValheim
+# ModTemplateValheim (Windows OS & Steam game)
 Template mod for Valheim using Bepinex that can call methods from the in-game console.  
 Everything required is automatically installed:
  - BepInEx (Unstripped UnityEngine dlls too) + HarmonyX
