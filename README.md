@@ -12,3 +12,7 @@ Everything required is automatically installed:
  - MSBuild 16+ (installed with Visual Studio)
  - Git (used to download & build Publicizer to publicize the game DLLs)
  - If you want C# 9 support you need https://dotnet.microsoft.com/download/dotnet/5.0 as well or change projects to use C# 8.
+
+## Credits
+https://github.com/MrPurple6411 - First to make a proper template. Used the proj dependencies from it as a base.
+https://github.com/sebastienvercammen - Providing help with overriding game dlls with unstripped dlls through UnityDoorstop.
