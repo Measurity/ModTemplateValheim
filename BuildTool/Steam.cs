@@ -37,17 +37,26 @@ namespace BuildTool
                     }
                 }
             }
+
             var appsPath = Path.Combine(steamPath, "steamapps");
-            var result = SearchAllInstallations(Path.Combine(appsPath, "libraryfolders.vdf"), steamAppId);
-            if (result == null)
+
+            // Test main steamapps.
+            var game = GameDataFromAppManifest(Path.Combine(appsPath, $"appmanifest_{steamAppId}.acf"));
+            if (game == null)
             {
-                throw new Exception($"Steam game with id {steamAppId} is not installed.");
+                // Test steamapps on other drives (as defined by Steam).
+                game = SearchAllInstallations(Path.Combine(appsPath, "libraryfolders.vdf"), steamAppId);
+                if (game == null)
+                {
+                    throw new Exception($"Steam game with id {steamAppId} is not installed.");
+                }
             }
-            return result;
+
+            return game;
         }
 
         private static SteamGameData SearchAllInstallations(
-            string libraryfoldersFile, uint appid)
+            string libraryfoldersFile, uint appId)
         {
             if (!File.Exists(libraryfoldersFile)) return null;
             // Turn contents of file into dictionary lookup.
@@ -58,25 +67,31 @@ namespace BuildTool
             {
                 steamLibraryIndex++;
                 if (!steamLibraryData.TryGetValue(steamLibraryIndex.ToString(), out var steamLibraryPath)) return null;
-                var steamAppDataFile = Path.Combine(steamLibraryPath, $"steamapps/appmanifest_{appid}.acf");
-                if (!File.Exists(steamAppDataFile)) continue;
+                var manifestFile = Path.Combine(steamLibraryPath, $"steamapps/appmanifest_{appId}.acf");
+                if (!File.Exists(manifestFile)) continue;
 
-                var gameData = JsonAsDictionary(File.ReadAllText(steamAppDataFile));
+                // Validate manifest is correct.
+                var game = GameDataFromAppManifest(manifestFile);
+                if (game.Id != appId) continue;
 
-                // Validate steam game data exists.
-                if (!gameData.TryGetValue("name", out var gameName)) continue;
-                if (!gameData.TryGetValue("appid", out var appidStr)) continue;
-                if (!gameData.TryGetValue("installdir", out var gameInstallFolderName)) continue;
-                // Validate Steam ID matches.
-                if (!uint.TryParse(appidStr, out var appIdFromData)) continue;
-                if (appIdFromData != appid) continue;
-                // Validate game Path exists.
-                var gameDir =
-                    Path.GetFullPath(Path.Combine(steamLibraryPath, "steamapps/common", gameInstallFolderName));
-                if (!Directory.Exists(gameDir)) continue;
-
-                return new SteamGameData(appid, gameName, gameInstallFolderName, gameDir);
+                return game;
             }
+        }
+
+        private static SteamGameData GameDataFromAppManifest(string manifestFile)
+        {
+            var gameData = JsonAsDictionary(File.ReadAllText(manifestFile));
+
+            // Validate steam game data exists.
+            if (!gameData.TryGetValue("name", out var gameName)) return null;
+            if (!gameData.TryGetValue("appid", out var appidStr)) return null;
+            if (!uint.TryParse(appidStr, out var appId)) return null;
+            if (!gameData.TryGetValue("installdir", out var gameInstallFolderName)) return null;
+            var gameDir =
+                Path.GetFullPath(Path.Combine(Path.GetDirectoryName(manifestFile), "common", gameInstallFolderName));
+            if (!Directory.Exists(gameDir)) return null;
+
+            return new SteamGameData(appId, gameName, gameInstallFolderName, gameDir);
         }
 
         private static Dictionary<string, string> JsonAsDictionary(string json)
