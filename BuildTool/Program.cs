@@ -18,14 +18,12 @@ namespace BuildTool
         private const string UnityDoorstopDownloadUrl =
             "https://github.com/NeighTools/UnityDoorstop/releases/download/v3.2.0.0/Doorstop_x64_3.2.0.0.zip";
 
-        private const string NugetExeDownloadUrl = "https://dist.nuget.org/win-x86-commandline/v5.7.0/nuget.exe";
-        private const string PublicizerGitRepo = "https://github.com/MrPurple6411/AssemblyPublicizer";
-
         private const string UnityUnstrippedDllsRepo =
             "https://codeload.github.com/Measurity/OriginalUEngineSources/zip/{VERSION}";
 
         private static readonly Regex iniRegex = new Regex(@"^(\w+)=(\\N+)?", RegexOptions.Compiled);
         private static readonly string[] skipZipExtractContains = {"example", "readme", "changelog"};
+        private const string UnstrippedDllsFolderName = "unstripped_corlib";
 
         private static uint SteamAppId =>
             !uint.TryParse(Environment.GetEnvironmentVariable("SteamAppId"), out var id) ? 892970 : id;
@@ -41,21 +39,45 @@ namespace BuildTool
             var game = await Task.Factory.StartNew(() => EnsureSteamGame(SteamAppId)).ConfigureAwait(false);
             Console.WriteLine($"Found game at {game.InstallDir}");
             await EnsureBepInExAsync(game.InstallDir);
-            var publicizerTask = Task.Factory.StartNew(() => EnsurePublicizedAssemblies(game));
-            await Task.WhenAll(publicizerTask,
-                    EnsureUnityDoorstopAsync(game),
-                    EnsureUnstrippedMonoAssembliesAsync(game))
+            await EnsureUnityDoorstopAsync(game);
+            await Task.WhenAll(Task.Factory.StartNew(() => EnsurePublicizedAssemblies(game)),
+                    EnsureUnstrippedMonoAssembliesAsync(game),
+                    Task.Factory.StartNew(() => EnsureUnityDoorstopConfig(game)))
                 .ConfigureAwait(false);
+        }
+
+        private static void EnsureUnityDoorstopConfig(SteamGameData game)
+        {
+            // Change UnityDoorstop configuration to make it override game dlls with unstripped dlls.
+            var unityDoorstopConfig = Path.Combine(game.InstallDir, "doorstop_config.ini");
+            if (!File.Exists(unityDoorstopConfig))
+            {
+                throw new FileNotFoundException("UnityDoorstop config file not found", unityDoorstopConfig);
+            }
+            var configContent = File.ReadAllLines(unityDoorstopConfig).ToList();
+            var requiredValues = new Dictionary<string, string>
+            {
+                {"dllSearchPathOverride", UnstrippedDllsFolderName},
+                {"targetAssembly", @"BepInEx\core\BepInEx.Preloader.dll"}
+            };
+            for (var i = 0; i < configContent.Count; i++)
+            {
+                var match = iniRegex.Match(configContent[i]);
+                if (!match.Success) continue;
+                if (!requiredValues.TryGetValue(match.Groups[1].Value, out var value)) continue;
+            
+                configContent[i] = $"{match.Groups[1].Value}={value}";
+                requiredValues.Remove(match.Groups[1].Value);
+            }
+            foreach (var pair in requiredValues)
+            {
+                configContent.Add($"{pair.Key}={pair.Value}");
+            }
+            File.WriteAllLines(unityDoorstopConfig, configContent);
         }
 
         private static async Task EnsureUnityDoorstopAsync(SteamGameData game)
         {
-            if (File.Exists(Path.Combine(game.InstallDir, "doorstop_config.ini")))
-            {
-                Console.WriteLine("Unity Doorstop is already installed.");
-                return;
-            }
-
             var zip = Path.Combine(Utils.GeneratedOutputDir, "unitydoorstop.zip");
             if (!File.Exists(zip))
             {
@@ -83,8 +105,7 @@ namespace BuildTool
 
         private static async Task EnsureUnstrippedMonoAssembliesAsync(SteamGameData game)
         {
-            const string unstrippedDllsFolderName = "unstripped_corlib";
-            if (Directory.Exists(Path.Combine(game.InstallDir, unstrippedDllsFolderName)))
+            if (Directory.Exists(Path.Combine(game.InstallDir, UnstrippedDllsFolderName)))
             {
                 Console.WriteLine("Unstripped Mono Assemblies are already installed.");
                 return;
@@ -95,10 +116,10 @@ namespace BuildTool
                 .FileVersion).ToString(3);
 
             // Create Unstripped dlls directory in game directory
-            var targetDir = Path.Combine(game.InstallDir, unstrippedDllsFolderName);
+            var targetDir = Path.Combine(game.InstallDir, UnstrippedDllsFolderName);
             Directory.CreateDirectory(targetDir);
 
-            // Download Unstripped dlls
+            // Download unstripped dlls
             var dllsZip = Path.Combine(Utils.GeneratedOutputDir, $@"{unityVersionUsedByGame}.zip");
             if (!File.Exists(dllsZip))
             {
@@ -108,7 +129,7 @@ namespace BuildTool
                     dllsZip);
             }
 
-            // Extract Unstripped dlls to Unstripped dlls directory in game directory
+            // Extract unstripped dlls to unstripped dlls directory in game directory
             using var zipReader = ZipFile.OpenRead(dllsZip);
             foreach (var entry in zipReader.Entries)
             {
@@ -118,33 +139,6 @@ namespace BuildTool
                 var targetFile = Path.Combine(targetDir, fileName);
                 entry.ExtractToFile(targetFile, true);
             }
-
-            // Change UnityDoorstop configuration to make it override game dlls with unstripped dlls.
-            var unityDoorstopConfig = Path.Combine(game.InstallDir, "doorstop_config.ini");
-            if (!File.Exists(unityDoorstopConfig))
-            {
-                throw new FileNotFoundException("UnityDoorstop config file not found", unityDoorstopConfig);
-            }
-            var configContent = File.ReadAllLines(unityDoorstopConfig).ToList();
-            var requiredValues = new Dictionary<string, string>
-            {
-                {"dllSearchPathOverride", unstrippedDllsFolderName},
-                {"targetAssembly", @"BepInEx\core\BepInEx.Preloader.dll"}
-            };
-            for (var i = 0; i < configContent.Count; i++)
-            {
-                var match = iniRegex.Match(configContent[i]);
-                if (!match.Success) continue;
-                if (!requiredValues.TryGetValue(match.Groups[1].Value, out var value)) continue;
-
-                configContent[i] = $"{match.Groups[1].Value}={value}";
-                requiredValues.Remove(match.Groups[1].Value);
-            }
-            foreach (var pair in requiredValues)
-            {
-                configContent.Add($"{pair.Key}={pair.Value}");
-            }
-            File.WriteAllLines(unityDoorstopConfig, configContent);
         }
 
         private static void EnsurePublicizedAssemblies(SteamGameData game)
@@ -203,46 +197,6 @@ namespace BuildTool
 
             game.TrySave(cacheFile);
             return game;
-        }
-
-        private static async Task<string> EnsurePublicizerAsync()
-        {
-            var repoDir = Path.Combine(Utils.GeneratedOutputDir, "AssemblyPublicizer");
-            var exe = Path.Combine(repoDir, "AssemblyPublicizer", "bin", "Release", "AssemblyPublicizer.exe");
-            if (File.Exists(exe))
-            {
-                return exe;
-            }
-
-            var nugetTask = EnsureNugetAsync();
-            // Download or update local publicizer repo through git.
-            if (!Directory.Exists(repoDir) || !Directory.GetFiles(repoDir).Any())
-            {
-                Utils.ExecuteShell($@"git clone ""{PublicizerGitRepo}""");
-            }
-            else
-            {
-                Utils.ExecuteShell(@"git pull --rebase origin master", repoDir);
-            }
-            // Build project: restore nuget + msbuild
-            var nuget = await nugetTask;
-            Utils.ExecuteShell($"\"{nuget}\" restore && \"{Utils.MsBuildExe}\" /t:Build /p:Configuration=Release",
-                repoDir);
-            if (!File.Exists(exe))
-            {
-                throw new FileNotFoundException("Publicizer was not found after MSBuild task.", exe);
-            }
-            return exe;
-        }
-
-        private static async Task<string> EnsureNugetAsync()
-        {
-            var nuget = Path.Combine(Utils.GeneratedOutputDir, "nuget.exe");
-            if (File.Exists(nuget)) return nuget;
-
-            using var client = new WebClient();
-            await client.DownloadFileTaskAsync(NugetExeDownloadUrl, nuget);
-            return nuget;
         }
 
         private static async Task EnsureBepInExAsync(string gameDir)
