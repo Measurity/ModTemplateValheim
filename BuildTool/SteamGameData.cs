@@ -33,21 +33,23 @@ namespace BuildTool
                 var game = new SteamGameData();
                 var xDoc = new XmlDocument();
                 xDoc.Load(path);
-                foreach (XmlElement elem in xDoc.DocumentElement.SelectSingleNode("/Project/PropertyGroup"))
+                XmlNamespaceManager nsManager = new XmlNamespaceManager(xDoc.NameTable);
+                nsManager.AddNamespace("d", xDoc.DocumentElement.NamespaceURI);
+                foreach (XmlElement elem in xDoc.DocumentElement.SelectNodes("//d:PropertyGroup/*", nsManager))
                 {
                     switch (elem.Name)
                     {
                         case "GameAppId":
-                            game.Id = uint.Parse(elem.Value);
+                            game.Id = uint.Parse(elem.LastChild.Value);
                             break;
                         case "GameName":
-                            game.Name = elem.Value;
+                            game.Name = elem.LastChild.Value;
                             break;
                         case "GameFolderName":
-                            game.InstallFolderName = elem.Value;
+                            game.InstallFolderName = elem.LastChild.Value;
                             break;
                         case "GameDir":
-                            game.InstallDir = elem.Value;
+                            game.InstallDir = elem.LastChild.Value;
                             break;
                     }
                 }
