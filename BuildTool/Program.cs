@@ -20,14 +20,18 @@ namespace BuildTool
 
         private const string NugetExeDownloadUrl = "https://dist.nuget.org/win-x86-commandline/v5.7.0/nuget.exe";
         private const string PublicizerGitRepo = "https://github.com/MrPurple6411/AssemblyPublicizer";
-        private const string UnityUnstrippedDllsRepo = "https://github.com/Measurity/OriginalUEngineSources";
+
+        private const string UnityUnstrippedDllsRepo =
+            "https://codeload.github.com/Measurity/OriginalUEngineSources/zip/{VERSION}";
+
         private static readonly Regex iniRegex = new Regex(@"^(\w+)=(\\N+)?", RegexOptions.Compiled);
         private static readonly string[] skipZipExtractContains = {"example", "readme", "changelog"};
 
         private static uint SteamAppId =>
             !uint.TryParse(Environment.GetEnvironmentVariable("SteamAppId"), out var id) ? 892970 : id;
 
-        private static bool SkipPublicizer => bool.TryParse(Environment.GetEnvironmentVariable("SkipPublicizer"), out bool skip) && skip;
+        private static bool SkipPublicizer =>
+            bool.TryParse(Environment.GetEnvironmentVariable("SkipPublicizer"), out var skip) && skip;
 
         public static async Task Main(string[] args)
         {
@@ -36,10 +40,12 @@ namespace BuildTool
             Console.WriteLine($"Building mod for Steam game with id {SteamAppId}");
             var game = await Task.Factory.StartNew(() => EnsureSteamGame(SteamAppId)).ConfigureAwait(false);
             Console.WriteLine($"Found game at {game.InstallDir}");
+            await EnsureBepInExAsync(game.InstallDir);
             var publicizerTask = Task.Factory.StartNew(() => EnsurePublicizedAssemblies(game));
-            await Task.WhenAll(EnsureBepInExAsync(game.InstallDir), publicizerTask, EnsureUnityDoorstopAsync(game))
+            await Task.WhenAll(publicizerTask,
+                    EnsureUnityDoorstopAsync(game),
+                    EnsureUnstrippedMonoAssembliesAsync(game))
                 .ConfigureAwait(false);
-            await Task.Factory.StartNew(() => EnsureUnstrippedMonoAssemblies(game));
         }
 
         private static async Task EnsureUnityDoorstopAsync(SteamGameData game)
@@ -75,43 +81,45 @@ namespace BuildTool
             }
         }
 
-        private static void EnsureUnstrippedMonoAssemblies(SteamGameData game)
+        private static async Task EnsureUnstrippedMonoAssembliesAsync(SteamGameData game)
         {
-            const string unstrippedDllsFolderName = "unstripped_dlls";
+            const string unstrippedDllsFolderName = "unstripped_corlib";
             if (Directory.Exists(Path.Combine(game.InstallDir, unstrippedDllsFolderName)))
             {
                 Console.WriteLine("Unstripped Mono Assemblies are already installed.");
                 return;
             }
-
-            // Download or update local Unity Engine dlls repo through git.
-            var repoDir = Path.Combine(Utils.GeneratedOutputDir, "OriginalUEngineSources");
-            if (!Directory.Exists(repoDir) || !Directory.GetFiles(repoDir).Any())
-            {
-                Utils.ExecuteShell($@"git clone ""{UnityUnstrippedDllsRepo}""");
-            }
-            else
-            {
-                Utils.ExecuteShell(@"git fetch --all", repoDir);
-            }
-            // Go to git branch with the clean dlls.
+            // Detect Unity Engine version the game is using.
             var unityVersionUsedByGame = new Version(FileVersionInfo
                 .GetVersionInfo(Path.Combine(game.InstallDir, "UnityPlayer.dll"))
-                .FileVersion);
-            if (Utils.ExecuteShell($@"git checkout ""{unityVersionUsedByGame.ToString(3)}""", repoDir) != 0)
-            {
-                throw new Exception(
-                    $"Failed to checkout Unity dll branch '{unityVersionUsedByGame.ToString(3)}' on repo {UnityUnstrippedDllsRepo}");
-            }
-            // Copy clean dlls to game.
+                .FileVersion).ToString(3);
+
+            // Create Unstripped dlls directory in game directory
             var targetDir = Path.Combine(game.InstallDir, unstrippedDllsFolderName);
             Directory.CreateDirectory(targetDir);
-            foreach (var sourceFile in Directory.GetFiles(repoDir, "*.dll"))
+
+            // Download Unstripped dlls
+            var dllsZip = Path.Combine(Utils.GeneratedOutputDir, $@"{unityVersionUsedByGame}.zip");
+            if (!File.Exists(dllsZip))
             {
-                var targetFile = Path.Combine(targetDir, Path.GetFileName(sourceFile));
-                File.Copy(sourceFile, targetFile, true);
+                using var client = new WebClient();
+                await client.DownloadFileTaskAsync(
+                    UnityUnstrippedDllsRepo.Replace("{VERSION}", unityVersionUsedByGame),
+                    dllsZip);
             }
-            // Change UnityDoorstop configuration to use clean dlls.
+
+            // Extract Unstripped dlls to Unstripped dlls directory in game directory
+            using var zipReader = ZipFile.OpenRead(dllsZip);
+            foreach (var entry in zipReader.Entries)
+            {
+                var fileName = Path.GetFileName(entry.FullName);
+                if (string.IsNullOrWhiteSpace(fileName)) continue;
+                
+                var targetFile = Path.Combine(targetDir, fileName);
+                entry.ExtractToFile(targetFile, true);
+            }
+
+            // Change UnityDoorstop configuration to make it override game dlls with unstripped dlls.
             var unityDoorstopConfig = Path.Combine(game.InstallDir, "doorstop_config.ini");
             if (!File.Exists(unityDoorstopConfig))
             {
@@ -153,7 +161,9 @@ namespace BuildTool
             }
 
             var dllsToPublicize = Directory.GetFiles(game.ManagedDllsDir, "assembly_*.dll");
-            foreach (var publicizedDll in Publicizer.Execute(dllsToPublicize, "_publicized", Path.Combine(Utils.GeneratedOutputDir, "publicized_assemblies")))
+            foreach (var publicizedDll in Publicizer.Execute(dllsToPublicize,
+                "_publicized",
+                Path.Combine(Utils.GeneratedOutputDir, "publicized_assemblies")))
             {
                 Console.WriteLine($"Wrote publicized dll: {publicizedDll}");
             }
@@ -229,7 +239,7 @@ namespace BuildTool
         {
             var nuget = Path.Combine(Utils.GeneratedOutputDir, "nuget.exe");
             if (File.Exists(nuget)) return nuget;
-            
+
             using var client = new WebClient();
             await client.DownloadFileTaskAsync(NugetExeDownloadUrl, nuget);
             return nuget;
