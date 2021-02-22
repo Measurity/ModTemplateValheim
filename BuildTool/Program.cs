@@ -33,9 +33,10 @@ namespace BuildTool
         {
             if (SteamAppId <= 0) throw new Exception("SteamAppId environment variable must be set and be valid");
 
+            Console.WriteLine($"Building mod for Steam game with id {SteamAppId}");
             var game = await Task.Factory.StartNew(() => EnsureSteamGame(SteamAppId)).ConfigureAwait(false);
-            var publicizerTask = EnsurePublicizerAsync()
-                .ContinueWith(t => Task.Factory.StartNew(() => EnsurePublicizedAssemblies(game, t.Result)));
+            Console.WriteLine($"Found game at {game.InstallDir}");
+            var publicizerTask = Task.Factory.StartNew(() => EnsurePublicizedAssemblies(game));
             await Task.WhenAll(EnsureBepInExAsync(game.InstallDir), publicizerTask, EnsureUnityDoorstopAsync(game))
                 .ConfigureAwait(false);
             await Task.Factory.StartNew(() => EnsureUnstrippedMonoAssemblies(game));
@@ -138,7 +139,7 @@ namespace BuildTool
             File.WriteAllLines(unityDoorstopConfig, configContent);
         }
 
-        private static void EnsurePublicizedAssemblies(SteamGameData game, string publicizerExe)
+        private static void EnsurePublicizedAssemblies(SteamGameData game)
         {
             if (SkipPublicizer)
             {
@@ -150,22 +151,22 @@ namespace BuildTool
                 Console.WriteLine("Assemblies are already publicized.");
                 return;
             }
-            var publicizerArgs = string.Join(" ",
-                Directory.GetFiles(game.ManagedDllsDir, "assembly_*.dll").Select(dll => @$"""{dll}"""));
-            Utils.ExecuteShell($@"""{publicizerExe}"" {publicizerArgs}", game.ManagedDllsDir);
-            // Copy publicized dlls to this solution
-            var targetDir = Path.Combine(Utils.GeneratedOutputDir, "publicized_assemblies");
-            Directory.CreateDirectory(targetDir);
-            foreach (var dll in Directory.GetFiles(Path.Combine(game.ManagedDllsDir, "publicized_assemblies")))
+
+            var dllsToPublicize = Directory.GetFiles(game.ManagedDllsDir, "assembly_*.dll");
+            foreach (var publicizedDll in Publicizer.Execute(dllsToPublicize, "_publicized", Path.Combine(Utils.GeneratedOutputDir, "publicized_assemblies")))
             {
-                File.Copy(dll, Path.Combine(targetDir, Path.GetFileName(dll)), true);
+                Console.WriteLine($"Wrote publicized dll: {publicizedDll}");
             }
         }
 
         private static SteamGameData EnsureSteamGame(uint steamAppId)
         {
-            static string ValidateUnityGame(SteamGameData game)
+            static string ValidateUnityGame(SteamGameData game, uint steamAppId)
             {
+                if (game.Id != steamAppId)
+                {
+                    return $"Steam id in game.props {game.Id} does not match {steamAppId}";
+                }
                 if (!File.Exists(Path.Combine(game.InstallDir, "UnityPlayer.dll")))
                 {
                     return "Steam game is not a Unity game.";
@@ -179,12 +180,12 @@ namespace BuildTool
 
             var cacheFile = Path.Combine(Utils.GeneratedOutputDir, "game.props");
             var game = SteamGameData.TryFrom(cacheFile);
-            if (game == null || ValidateUnityGame(game) != null)
+            if (game == null || ValidateUnityGame(game, steamAppId) != null)
             {
                 game = Steam.FindGame(steamAppId);
             }
 
-            var error = ValidateUnityGame(game);
+            var error = ValidateUnityGame(game, steamAppId);
             if (error != null)
             {
                 throw new Exception(error);
@@ -228,10 +229,9 @@ namespace BuildTool
         {
             var nuget = Path.Combine(Utils.GeneratedOutputDir, "nuget.exe");
             if (File.Exists(nuget)) return nuget;
-            using (var client = new WebClient())
-            {
-                await client.DownloadFileTaskAsync(NugetExeDownloadUrl, nuget);
-            }
+            
+            using var client = new WebClient();
+            await client.DownloadFileTaskAsync(NugetExeDownloadUrl, nuget);
             return nuget;
         }
 

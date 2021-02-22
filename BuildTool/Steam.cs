@@ -23,7 +23,19 @@ namespace BuildTool
             var steamPath = (string) ReadRegistrySafe("Software\\Valve\\Steam", "SteamPath");
             if (string.IsNullOrEmpty(steamPath))
             {
-                throw new Exception("Steam could not be found. Check if it is installed.");
+                try
+                {
+                    steamPath = (string) ReadRegistrySafe(@"SOFTWARE\Valve\Steam",
+                        "InstallPath",
+                        RegistryHive.LocalMachine);
+                }
+                finally
+                {
+                    if (string.IsNullOrEmpty(steamPath))
+                    {
+                        throw new Exception("Steam could not be found. Check if it is installed.");
+                    }
+                }
             }
             var appsPath = Path.Combine(steamPath, "steamapps");
             var result = SearchAllInstallations(Path.Combine(appsPath, "libraryfolders.vdf"), steamAppId);
@@ -74,17 +86,10 @@ namespace BuildTool
                 .ToDictionary(m => m.Groups[1].Value.ToLowerInvariant(), m => m.Groups[2].Value);
         }
 
-        private static object ReadRegistrySafe(string path, string key)
+        private static object ReadRegistrySafe(string path, string key, RegistryHive hive = RegistryHive.CurrentUser)
         {
-            using (var subkey = Registry.CurrentUser.OpenSubKey(path))
-            {
-                if (subkey != null)
-                {
-                    return subkey.GetValue(key);
-                }
-            }
-
-            return null;
+            using var subkey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry32).OpenSubKey(path);
+            return subkey?.GetValue(key);
         }
     }
 }

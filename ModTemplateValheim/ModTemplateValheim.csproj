@@ -43,13 +43,6 @@
         <Compile Include="Utils\CommandParser.cs" />
         <Compile Include="Utils\ReflectionUtils.cs" />
     </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\BuildTool\BuildTool.csproj">
-            <Project>{2080bd2a-a6f1-4a0e-bd81-ca58dc667417}</Project>
-            <Name>BuildTool</Name>
-            <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-        </ProjectReference>
-    </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     
     <!-- Copy mod to BepInEx "plugins" directory -->
@@ -247,5 +240,11 @@
             <HintPath>$(GameManagedDir)UnityEngine.XRModule.dll</HintPath>
             <Private>False</Private>
         </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\BuildTool\BuildTool.csproj">
+        <Project>{2080bd2a-a6f1-4a0e-bd81-ca58dc667417}</Project>
+        <Name>BuildTool</Name>
+      </ProjectReference>
     </ItemGroup>
 </Project>
