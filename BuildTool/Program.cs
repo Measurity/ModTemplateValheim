@@ -27,6 +27,8 @@ namespace BuildTool
         private static uint SteamAppId =>
             !uint.TryParse(Environment.GetEnvironmentVariable("SteamAppId"), out var id) ? 892970 : id;
 
+        private static bool SkipPublicizer => bool.TryParse(Environment.GetEnvironmentVariable("SkipPublicizer"), out bool skip) && skip;
+
         public static async Task Main(string[] args)
         {
             if (SteamAppId <= 0) throw new Exception("SteamAppId environment variable must be set and be valid");
@@ -41,6 +43,12 @@ namespace BuildTool
 
         private static async Task EnsureUnityDoorstopAsync(SteamGameData game)
         {
+            if (File.Exists(Path.Combine(game.InstallDir, "doorstop_config.ini")))
+            {
+                Console.WriteLine("Unity Doorstop is already installed.");
+                return;
+            }
+
             var zip = Path.Combine(Utils.GeneratedOutputDir, "unitydoorstop.zip");
             if (!File.Exists(zip))
             {
@@ -50,7 +58,7 @@ namespace BuildTool
 
             // Extract UnityDoorstop zip over game files.
             using var zipReader = ZipFile.OpenRead(zip);
-            
+
             string[] skipIfExists = {"doorstop_config.ini"};
             foreach (var entry in zipReader.Entries)
             {
@@ -69,6 +77,11 @@ namespace BuildTool
         private static void EnsureUnstrippedMonoAssemblies(SteamGameData game)
         {
             const string unstrippedDllsFolderName = "unstripped_dlls";
+            if (Directory.Exists(Path.Combine(game.InstallDir, unstrippedDllsFolderName)))
+            {
+                Console.WriteLine("Unstripped Mono Assemblies are already installed.");
+                return;
+            }
 
             // Download or update local Unity Engine dlls repo through git.
             var repoDir = Path.Combine(Utils.GeneratedOutputDir, "OriginalUEngineSources");
@@ -127,6 +140,16 @@ namespace BuildTool
 
         private static void EnsurePublicizedAssemblies(SteamGameData game, string publicizerExe)
         {
+            if (SkipPublicizer)
+            {
+                Console.WriteLine("Skipping Assembly Publicizer, execute this manually.");
+                return;
+            }
+            if (Directory.Exists(Path.Combine(Utils.GeneratedOutputDir, "publicized_assemblies")))
+            {
+                Console.WriteLine("Assemblies are already publicized.");
+                return;
+            }
             var publicizerArgs = string.Join(" ",
                 Directory.GetFiles(game.ManagedDllsDir, "assembly_*.dll").Select(dll => @$"""{dll}"""));
             Utils.ExecuteShell($@"""{publicizerExe}"" {publicizerArgs}", game.ManagedDllsDir);
@@ -232,7 +255,7 @@ namespace BuildTool
             {
                 if (skipZipExtractContains.Any(
                     name => entry.FullName.IndexOf(name, StringComparison.InvariantCultureIgnoreCase) >= 0)) continue;
-                
+
                 var targetFile = Path.Combine(gameDir, entry.FullName);
                 Directory.CreateDirectory(Path.GetDirectoryName(targetFile));
                 entry.ExtractToFile(targetFile, true);
