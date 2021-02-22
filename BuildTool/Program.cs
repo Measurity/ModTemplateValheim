@@ -20,7 +20,7 @@ namespace BuildTool
 
         private const string NugetExeDownloadUrl = "https://dist.nuget.org/win-x86-commandline/v5.7.0/nuget.exe";
         private const string PublicizerGitRepo = "https://github.com/MrPurple6411/AssemblyPublicizer";
-        private const string UnityUnstrippedDllsRepo = "https://github.com/Measurity/OriginalUEngineSources";
+        private const string UnityUnstrippedDllsRepo = "https://codeload.github.com/Measurity/OriginalUEngineSources/zip/{VERSION}";
         private static readonly Regex iniRegex = new Regex(@"^(\w+)=(\\N+)?", RegexOptions.Compiled);
         private static readonly string[] skipZipExtractContains = {"example", "readme", "changelog"};
 
@@ -36,9 +36,8 @@ namespace BuildTool
             var game = await Task.Factory.StartNew(() => EnsureSteamGame(SteamAppId)).ConfigureAwait(false);
             var publicizerTask = EnsurePublicizerAsync()
                 .ContinueWith(t => Task.Factory.StartNew(() => EnsurePublicizedAssemblies(game, t.Result)));
-            await Task.WhenAll(EnsureBepInExAsync(game.InstallDir), publicizerTask, EnsureUnityDoorstopAsync(game))
+            await Task.WhenAll(EnsureBepInExAsync(game.InstallDir), publicizerTask, EnsureUnityDoorstopAsync(game), EnsureUnstrippedMonoAssemblies(game))
                 .ConfigureAwait(false);
-            await Task.Factory.StartNew(() => EnsureUnstrippedMonoAssemblies(game));
         }
 
         private static async Task EnsureUnityDoorstopAsync(SteamGameData game)
@@ -74,7 +73,7 @@ namespace BuildTool
             }
         }
 
-        private static void EnsureUnstrippedMonoAssemblies(SteamGameData game)
+        private static async Task EnsureUnstrippedMonoAssemblies(SteamGameData game)
         {
             const string unstrippedDllsFolderName = "unstripped_dlls";
             if (Directory.Exists(Path.Combine(game.InstallDir, unstrippedDllsFolderName)))
@@ -83,33 +82,38 @@ namespace BuildTool
                 return;
             }
 
-            // Download or update local Unity Engine dlls repo through git.
-            var repoDir = Path.Combine(Utils.GeneratedOutputDir, "OriginalUEngineSources");
-            if (!Directory.Exists(repoDir) || !Directory.GetFiles(repoDir).Any())
+            // Create Unstripped dlls directory in game directory
+            var targetDir = Path.Combine(game.InstallDir, unstrippedDllsFolderName);
+            if (!Directory.Exists(targetDir))
             {
-                Utils.ExecuteShell($@"git clone ""{UnityUnstrippedDllsRepo}""");
+                Directory.CreateDirectory(targetDir);
             }
-            else
-            {
-                Utils.ExecuteShell(@"git fetch --all", repoDir);
-            }
-            // Go to git branch with the clean dlls.
+
             var unityVersionUsedByGame = new Version(FileVersionInfo
                 .GetVersionInfo(Path.Combine(game.InstallDir, "UnityPlayer.dll"))
-                .FileVersion);
-            if (Utils.ExecuteShell($@"git checkout ""{unityVersionUsedByGame.ToString(3)}""", repoDir) != 0)
+                .FileVersion).ToString(3);
+
+            // Download Unstripped dlls
+            var zip = Path.Combine(Utils.GeneratedOutputDir, $@"{unityVersionUsedByGame}.zip");
+            if (!File.Exists(zip))
             {
-                throw new Exception(
-                    $"Failed to checkout Unity dll branch '{unityVersionUsedByGame.ToString(3)}' on repo {UnityUnstrippedDllsRepo}");
+                using var client = new WebClient();
+                await client.DownloadFileTaskAsync(UnityUnstrippedDllsRepo.Replace("{VERSION}", "unityVersionUsedByGame"), zip);
             }
-            // Copy clean dlls to game.
-            var targetDir = Path.Combine(game.InstallDir, unstrippedDllsFolderName);
-            Directory.CreateDirectory(targetDir);
-            foreach (var sourceFile in Directory.GetFiles(repoDir, "*.dll"))
+
+            // Extract Unstripped dlls to Unstripped dlls directory in game directory
+            using var zipReader = ZipFile.OpenRead(zip);
+            foreach (var entry in zipReader.Entries)
             {
-                var targetFile = Path.Combine(targetDir, Path.GetFileName(sourceFile));
-                File.Copy(sourceFile, targetFile, true);
+                var fileName = entry.FullName.Split('/')?[1];
+                if (fileName != String.Empty)
+                {
+                    var targetFile = Path.Combine(targetDir, fileName);
+                    entry.ExtractToFile(targetFile, true);
+                }
+
             }
+
             // Change UnityDoorstop configuration to use clean dlls.
             var unityDoorstopConfig = Path.Combine(game.InstallDir, "doorstop_config.ini");
             if (!File.Exists(unityDoorstopConfig))
