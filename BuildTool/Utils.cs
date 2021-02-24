@@ -11,36 +11,9 @@ namespace BuildTool
         private static readonly Lazy<string> processDir =
             new Lazy<string>(() => Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
 
-        private static readonly Lazy<string> msBuildExe = new Lazy<string>(() =>
-        {
-            var startOptions = new ProcessStartInfo
-            {
-                FileName = Environment.ExpandEnvironmentVariables(
-                    @"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"),
-                Arguments = @"-latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe",
-                WindowStyle = ProcessWindowStyle.Hidden,
-                CreateNoWindow = true,
-                UseShellExecute = false,
-                RedirectStandardOutput = true
-            };
-            using var p = Process.Start(startOptions);
-            if (p == null)
-            {
-                return null;
-            }
-
-            p.Start();
-            var output = p.StandardOutput.ReadToEnd();
-            p.WaitForExit();
-
-            return output.Trim();
-        });
-
         public static string ProcessDir => processDir.Value;
 
         public static string GeneratedOutputDir => Path.Combine(ProcessDir, "generated_files");
-
-        public static string MsBuildExe => msBuildExe.Value;
 
         public static int ExecuteShell(string command, string workingDirectory = null)
         {
