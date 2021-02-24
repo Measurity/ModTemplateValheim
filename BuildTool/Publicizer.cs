@@ -52,8 +52,9 @@ namespace BuildTool
 
             foreach (var type in allTypes)
             {
-                if (!(type?.IsPublic ?? false)) continue;
-                    
+                if (type == null) continue;
+                if (type.IsPublic && type.IsNestedPublic) continue;
+                
                 if (type.IsNested)
                     type.IsNestedPublic = true;
                 else
