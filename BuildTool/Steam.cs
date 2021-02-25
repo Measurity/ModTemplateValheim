@@ -80,7 +80,15 @@ namespace BuildTool
 
         private static SteamGameData GameDataFromAppManifest(string manifestFile)
         {
-            var gameData = JsonAsDictionary(File.ReadAllText(manifestFile));
+            Dictionary<string, string> gameData = null;
+            try
+            {
+                gameData = JsonAsDictionary(File.ReadAllText(manifestFile));
+            }
+            catch (FileNotFoundException)
+            {
+                return null;
+            }
 
             // Validate steam game data exists.
             if (!gameData.TryGetValue("name", out var gameName)) return null;
