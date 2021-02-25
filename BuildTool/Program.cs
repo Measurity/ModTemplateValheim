@@ -201,7 +201,7 @@ namespace BuildTool
 
         private static async Task EnsureBepInExAsync(string gameDir)
         {
-            if (File.Exists(Path.Combine(gameDir, "BepInEx", "core", "BepInEx.dll")))
+            if (File.Exists(Path.Combine(Utils.GeneratedOutputDir, "bepinex.zip")) && File.Exists(Path.Combine(gameDir, "BepInEx", "core", "BepInEx.dll")))
             {
                 Console.WriteLine("BepInEx is already installed.");
                 return;
