@@ -2,7 +2,7 @@
 Template mod for Valheim using Bepinex. Works for Steam, client-side only!
 Everything required is **automatically installed into Valheim**:
  - BepInEx (Unstripped UnityEngine dlls too) + HarmonyX
- - Publicizes dlls from game dlls as dependencies
+ - Publicizes dlls from game as project dependencies
  - Moves your mod into the BepInEx plugins folder.
 
 ## How to use template
