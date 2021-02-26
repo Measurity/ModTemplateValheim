@@ -9,6 +9,7 @@ Everything required is **automatically installed into Valheim**:
  - Rebuild solution **twice**: PLAY!
  - Rename the ModTemplateValheim.sln to rename mod. Things not yet automatically renamed:
    - Code namespaces
+   - The BepInPugin attribute on Mod.cs.
    - Mod name in /AssemblyInfo.cs (shared between all projects)
 
 ## Requirements
