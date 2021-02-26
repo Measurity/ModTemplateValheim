@@ -7,6 +7,9 @@ Everything required is automatically installed:
 
 ## How to use template
  - Rebuild solution **twice**: PLAY!
+ - Rename the ModTemplateValheim.sln to rename mod. Things not yet automatically renamed:
+   - Code namespaces
+   - Mod name in /AssemblyInfo.cs (shared between all projects)
 
 ## Requirements
  - MSBuild 16+ (installed with Visual Studio)
