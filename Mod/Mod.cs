@@ -19,7 +19,7 @@ namespace ModTemplateValheim
 
         private void OnDestroy()
         {
-            harmony.UnpatchAll();
+            harmony.UnpatchSelf();
         }
     }
 }
