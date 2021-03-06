@@ -12,10 +12,7 @@ namespace ModTemplateValheim
         public const string PluginName = "ModTemplateValheim";
         public const string PluginVersion = "1.0.0.0";
 
-        private static readonly Harmony harmony = new(typeof(Mod).GetCustomAttributes(typeof(BepInPlugin), false)
-            .Cast<BepInPlugin>()
-            .First()
-            .GUID);
+        private static readonly Harmony harmony = new(PluginGuid);
 
         private void Awake()
         {
