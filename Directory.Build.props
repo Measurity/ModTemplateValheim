@@ -11,8 +11,4 @@
         <LangVersion>9</LangVersion>
         <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     </PropertyGroup>
-    <ItemGroup>
-        <!-- Use shared assembly info for all projects. -->
-        <Compile Include="../AssemblyInfo.cs" />
-    </ItemGroup>
 </Project>

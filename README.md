@@ -10,7 +10,6 @@ Everything required is **automatically installed into Valheim**:
  - Rename the ModTemplateValheim.sln to rename mod. Things not yet automatically renamed:
    - Code namespaces
    - The BepInPugin attribute on Mod.cs.
-   - Mod name in /AssemblyInfo.cs (shared between all projects)
 
 ## Requirements
  - MSBuild 16+ (installed with Visual Studio)

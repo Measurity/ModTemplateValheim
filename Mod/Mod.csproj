@@ -38,6 +38,9 @@
         <Compile Include="Utils\CommandParser.cs" />
         <Compile Include="Utils\ReflectionUtils.cs" />
     </ItemGroup>
+    <ItemGroup>
+        <Compile Include="Properties/AssemblyInfo.cs" />
+    </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     
     <!-- Copy mod to BepInEx "plugins" directory -->

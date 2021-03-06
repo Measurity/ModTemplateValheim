@@ -4,9 +4,14 @@ using HarmonyLib;
 
 namespace ModTemplateValheim
 {
-    [BepInPlugin("com.github.measurity.modtemplatevalheim", "ModTemplateValheim", "1.0.0.0")]
+    [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
     public class Mod : BaseUnityPlugin
     {
+        public const string PluginAuthor = "Measurity";
+        public const string PluginGuid = "com.github.measurity.modtemplatevalheim";
+        public const string PluginName = "ModTemplateValheim";
+        public const string PluginVersion = "1.0.0.0";
+
         private static readonly Harmony harmony = new(typeof(Mod).GetCustomAttributes(typeof(BepInPlugin), false)
             .Cast<BepInPlugin>()
             .First()
