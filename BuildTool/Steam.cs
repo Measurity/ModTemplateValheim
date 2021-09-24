@@ -9,8 +9,6 @@ namespace BuildTool
 {
     public static class Steam
     {
-        private static readonly Regex steamJsonRegex = new Regex("\"(.*)\"\t*\"(.*)\"", RegexOptions.Compiled);
-
         /// <summary>
         ///     Finds game install directory by iterating through all the steam game libraries configured and finding the appid
         ///     that matches.
@@ -59,14 +57,11 @@ namespace BuildTool
             string libraryfoldersFile, uint appId)
         {
             if (!File.Exists(libraryfoldersFile)) return null;
-            // Turn contents of file into dictionary lookup.
-            var steamLibraryData = JsonAsDictionary(File.ReadAllText(libraryfoldersFile));
 
-            var steamLibraryIndex = 0;
-            while (true)
+            var steamLibraryPaths = GetLibraryPaths(File.ReadAllText(libraryfoldersFile));
+
+            foreach (string steamLibraryPath in steamLibraryPaths)
             {
-                steamLibraryIndex++;
-                if (!steamLibraryData.TryGetValue(steamLibraryIndex.ToString(), out var steamLibraryPath)) return null;
                 var manifestFile = Path.Combine(steamLibraryPath, $"steamapps/appmanifest_{appId}.acf");
                 if (!File.Exists(manifestFile)) continue;
 
@@ -76,6 +71,8 @@ namespace BuildTool
 
                 return game;
             }
+
+            return null;
         }
 
         private static SteamGameData GameDataFromAppManifest(string manifestFile)
@@ -104,9 +101,19 @@ namespace BuildTool
 
         private static Dictionary<string, string> JsonAsDictionary(string json)
         {
-            return steamJsonRegex.Matches(json)
+            var regex = new Regex("\"(.*)\"\t*\"(.*)\"", RegexOptions.Compiled);
+            return regex.Matches(json)
                 .Cast<Match>()
                 .ToDictionary(m => m.Groups[1].Value.ToLowerInvariant(), m => m.Groups[2].Value);
+        }
+
+        private static string[] GetLibraryPaths(string json)
+        {
+            var regex = new Regex("\"path\"\t*\"(.*)\"", RegexOptions.Compiled);
+            return regex.Matches(json)
+                .OfType<Match>()
+                .Select(m => m.Groups[1].Value)
+                .ToArray();
         }
 
         private static object ReadRegistrySafe(string path, string key, RegistryHive hive = RegistryHive.CurrentUser)
