@@ -105,7 +105,7 @@ namespace BuildTool
 
         private static async Task EnsureUnstrippedMonoAssembliesAsync(SteamGameData game)
         {
-            if (Directory.Exists(Path.Combine(game.InstallDir, UnstrippedDllsFolderName)))
+            if (Directory.GetFileSystemEntries(Path.Combine(game.InstallDir, UnstrippedDllsFolderName), "*.dll").Any())
             {
                 Console.WriteLine("Unstripped Mono Assemblies are already installed.");
                 return;

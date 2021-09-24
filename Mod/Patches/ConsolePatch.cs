@@ -13,7 +13,7 @@ namespace ModTemplateValheim.Patches
         /// <summary>
         ///     Example harmony Prefix patch for in-game console input. Replace with your patching.
         /// </summary>
-        [HarmonyPatch(typeof(Console), "InputText")]
+        [HarmonyPatch(typeof(Terminal), nameof(Terminal.InputText))]
         public static class InputText
         {
             public static bool Prefix()
