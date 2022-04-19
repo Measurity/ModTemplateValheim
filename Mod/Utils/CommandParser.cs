@@ -10,6 +10,14 @@ namespace ModTemplateValheim.Utils
     /// </summary>
     public static class CommandParser
     {
+        private static readonly Func<string, int, TakerResult>[] segmentTakers =
+        {
+            TakeInt,
+            TakeFloat,
+            TakeString,
+            TakeIdentifier
+        };
+
         public enum SegmentType
         {
             Unknown,
@@ -18,14 +26,6 @@ namespace ModTemplateValheim.Utils
             String,
             Identifier
         }
-
-        private static readonly Func<string, int, TakerResult>[] segmentTakers =
-        {
-            TakeInt,
-            TakeFloat,
-            TakeString,
-            TakeIdentifier
-        };
 
         public static IEnumerable<CommandSegment> Parse(string input)
         {
@@ -72,22 +72,22 @@ namespace ModTemplateValheim.Utils
 
         private static TakerResult TakeIdentifier(string input, int offset)
         {
-            var match = Regex.Match(input.Substring(offset), @"^\w+");
-            var segment = match.Success ? new CommandSegment(SegmentType.Identifier, match.Value) : null;
+            Match match = Regex.Match(input.Substring(offset), @"^\w+");
+            CommandSegment segment = match.Success ? new CommandSegment(SegmentType.Identifier, match.Value) : null;
             return new TakerResult(segment, offset + segment?.Text.Length ?? offset);
         }
 
         private static TakerResult TakeInt(string input, int offset)
         {
-            var match = Regex.Match(input.Substring(offset), @"^\-?\d+");
-            var segment = match.Success ? new CommandSegment(SegmentType.Int, match.Value) : null;
+            Match match = Regex.Match(input.Substring(offset), @"^\-?\d+");
+            CommandSegment segment = match.Success ? new CommandSegment(SegmentType.Int, match.Value) : null;
             return new TakerResult(segment, offset + segment?.Text.Length ?? offset);
         }
 
         private static TakerResult TakeFloat(string input, int offset)
         {
-            var match = Regex.Match(input.Substring(offset), @"^\-?\d+(?:\.\d+)?");
-            var segment = match.Success ? new CommandSegment(SegmentType.Float, match.Value) : null;
+            Match match = Regex.Match(input.Substring(offset), @"^\-?\d+(?:\.\d+)?");
+            CommandSegment segment = match.Success ? new CommandSegment(SegmentType.Float, match.Value) : null;
             return new TakerResult(segment, offset + segment?.Text.Length ?? offset);
         }
 
@@ -98,7 +98,7 @@ namespace ModTemplateValheim.Utils
                 return null;
             }
 
-            var sb = new StringBuilder();
+            StringBuilder sb = new();
             offset++;
             while (offset < input.Length)
             {
@@ -132,7 +132,10 @@ namespace ModTemplateValheim.Utils
             public SegmentType Type { get; }
             public string Text { get; }
 
-            public override string ToString() => Text;
+            public override string ToString()
+            {
+                return Text;
+            }
         }
 
         public class TakerResult

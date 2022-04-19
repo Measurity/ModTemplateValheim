@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -22,7 +21,7 @@ namespace BuildTool
             }
 
             // Create dependency resolve for cecil (needed to write dlls that have other dependencies).
-            var resolver = new DefaultAssemblyResolver();
+            DefaultAssemblyResolver resolver = new();
 
             foreach (var file in files)
             {
@@ -41,7 +40,7 @@ namespace BuildTool
 
         private static AssemblyDefinition Publicize(string file, BaseAssemblyResolver dllResolver)
         {
-            var assembly = AssemblyDefinition.ReadAssembly(file,
+            AssemblyDefinition assembly = AssemblyDefinition.ReadAssembly(file,
                 new ReaderParameters
                 {
                     AssemblyResolver = dllResolver
@@ -50,24 +49,24 @@ namespace BuildTool
             var allMethods = allTypes.SelectMany(t => t.Methods);
             var allFields = FilterBackingEventFields(allTypes);
 
-            foreach (var type in allTypes)
+            foreach (TypeDefinition type in allTypes)
             {
                 if (type == null) continue;
                 if (type.IsPublic && type.IsNestedPublic) continue;
-                
+
                 if (type.IsNested)
                     type.IsNestedPublic = true;
                 else
                     type.IsPublic = true;
             }
-            foreach (var method in allMethods)
+            foreach (MethodDefinition method in allMethods)
             {
                 if (!method?.IsPublic ?? false)
                 {
                     method.IsPublic = true;
                 }
             }
-            foreach (var field in allFields)
+            foreach (FieldDefinition field in allFields)
             {
                 if (!field?.IsPublic ?? false)
                 {
@@ -93,8 +92,11 @@ namespace BuildTool
         /// </summary>
         /// <param name="moduleDefinition"></param>
         /// <returns></returns>
-        public static IEnumerable<TypeDefinition> GetAllTypes(ModuleDefinition moduleDefinition) =>
-            _GetAllNestedTypes(moduleDefinition.Types); //.Reverse();
+        public static IEnumerable<TypeDefinition> GetAllTypes(ModuleDefinition moduleDefinition)
+        {
+            return _GetAllNestedTypes(moduleDefinition.Types);
+            //.Reverse();
+        }
 
         /// <summary>
         ///     Recursive method to get all nested types. Use <see cref="GetAllTypes(ModuleDefinition)" />

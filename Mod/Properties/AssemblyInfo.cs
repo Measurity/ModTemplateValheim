@@ -1,14 +1,15 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
+using ModTemplateValheim;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle(ModTemplateValheim.Mod.PluginName)]
+[assembly: AssemblyTitle(Mod.PluginName)]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany(ModTemplateValheim.Mod.PluginAuthor)]
-[assembly: AssemblyProduct(ModTemplateValheim.Mod.PluginName)]
+[assembly: AssemblyCompany(Mod.PluginAuthor)]
+[assembly: AssemblyProduct(Mod.PluginName)]
 [assembly: AssemblyCopyright("Copyright ©  2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -29,5 +30,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion(ModTemplateValheim.Mod.PluginVersion)]
-[assembly: AssemblyFileVersion(ModTemplateValheim.Mod.PluginVersion)]
+[assembly: AssemblyVersion(Mod.PluginVersion)]
+[assembly: AssemblyFileVersion(Mod.PluginVersion)]

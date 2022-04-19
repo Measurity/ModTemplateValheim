@@ -18,12 +18,12 @@ namespace BuildTool
         /// <exception cref="Exception">If steam is not installed or game could not be found.</exception>
         public static SteamGameData FindGame(uint steamAppId)
         {
-            var steamPath = (string) ReadRegistrySafe("Software\\Valve\\Steam", "SteamPath");
+            var steamPath = (string)ReadRegistrySafe("Software\\Valve\\Steam", "SteamPath");
             if (string.IsNullOrEmpty(steamPath))
             {
                 try
                 {
-                    steamPath = (string) ReadRegistrySafe(@"SOFTWARE\Valve\Steam",
+                    steamPath = (string)ReadRegistrySafe(@"SOFTWARE\Valve\Steam",
                         "InstallPath",
                         RegistryHive.LocalMachine);
                 }
@@ -39,7 +39,7 @@ namespace BuildTool
             var appsPath = Path.Combine(steamPath, "steamapps");
 
             // Test main steamapps.
-            var game = GameDataFromAppManifest(Path.Combine(appsPath, $"appmanifest_{steamAppId}.acf"));
+            SteamGameData game = GameDataFromAppManifest(Path.Combine(appsPath, $"appmanifest_{steamAppId}.acf"));
             if (game == null)
             {
                 // Test steamapps on other drives (as defined by Steam).
@@ -54,19 +54,20 @@ namespace BuildTool
         }
 
         private static SteamGameData SearchAllInstallations(
-            string libraryfoldersFile, uint appId)
+            string libraryfoldersFile,
+            uint appId)
         {
             if (!File.Exists(libraryfoldersFile)) return null;
 
             var steamLibraryPaths = GetLibraryPaths(File.ReadAllText(libraryfoldersFile));
 
-            foreach (string steamLibraryPath in steamLibraryPaths)
+            foreach (var steamLibraryPath in steamLibraryPaths)
             {
                 var manifestFile = Path.Combine(steamLibraryPath, $"steamapps/appmanifest_{appId}.acf");
                 if (!File.Exists(manifestFile)) continue;
 
                 // Validate manifest is correct.
-                var game = GameDataFromAppManifest(manifestFile);
+                SteamGameData game = GameDataFromAppManifest(manifestFile);
                 if (game.Id != appId) continue;
 
                 return game;
@@ -101,7 +102,7 @@ namespace BuildTool
 
         private static Dictionary<string, string> JsonAsDictionary(string json)
         {
-            var regex = new Regex("\"(.*)\"\t*\"(.*)\"", RegexOptions.Compiled);
+            Regex regex = new("\"(.*)\"\t*\"(.*)\"", RegexOptions.Compiled);
             return regex.Matches(json)
                 .Cast<Match>()
                 .ToDictionary(m => m.Groups[1].Value.ToLowerInvariant(), m => m.Groups[2].Value);
@@ -109,7 +110,7 @@ namespace BuildTool
 
         private static string[] GetLibraryPaths(string json)
         {
-            var regex = new Regex("\"path\"\t*\"(.*)\"", RegexOptions.Compiled);
+            Regex regex = new("\"path\"\t*\"(.*)\"", RegexOptions.Compiled);
             return regex.Matches(json)
                 .OfType<Match>()
                 .Select(m => m.Groups[1].Value)
@@ -118,7 +119,7 @@ namespace BuildTool
 
         private static object ReadRegistrySafe(string path, string key, RegistryHive hive = RegistryHive.CurrentUser)
         {
-            using var subkey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry32).OpenSubKey(path);
+            using RegistryKey subkey = RegistryKey.OpenBaseKey(hive, RegistryView.Registry32).OpenSubKey(path);
             return subkey?.GetValue(key);
         }
     }

@@ -18,7 +18,7 @@ namespace ModTemplateValheim.Patches
         {
             public static bool Prefix()
             {
-                var console = Console.instance;
+                Console console = Console.instance;
                 var input = console.m_input.text;
                 if (!input.StartsWith("call", true, CultureInfo.InvariantCulture))
                 {
@@ -32,18 +32,18 @@ namespace ModTemplateValheim.Patches
                     return false;
                 }
                 console.AddString(input);
-                var targetClass = typeof(Console).Assembly.GetTypes()
+                Type targetClass = typeof(Console).Assembly.GetTypes()
                     .FirstOrDefault(t => t.Name.Equals(parts[1].Text, StringComparison.InvariantCultureIgnoreCase));
                 if (targetClass == null)
                 {
                     console.AddString($"Could not find class with name '{parts[1]}'");
                     return false;
                 }
-                var method = targetClass.GetMethods(BindingFlags.Public |
-                                                    BindingFlags.Static |
-                                                    BindingFlags.NonPublic |
-                                                    BindingFlags.Instance |
-                                                    BindingFlags.InvokeMethod)
+                MethodInfo method = targetClass.GetMethods(BindingFlags.Public |
+                                                           BindingFlags.Static |
+                                                           BindingFlags.NonPublic |
+                                                           BindingFlags.Instance |
+                                                           BindingFlags.InvokeMethod)
                     .FirstOrDefault(m => m.Name.Equals(parts[2].Text, StringComparison.InvariantCultureIgnoreCase));
                 if (method == null)
                 {
@@ -62,7 +62,7 @@ namespace ModTemplateValheim.Patches
                 for (var i = 0; i < methodParams.Length; i++)
                 {
                     var argText = parts[i + 3].Text;
-                    var paramType = methodParams[i].ParameterType;
+                    Type paramType = methodParams[i].ParameterType;
                     try
                     {
                         methodArgsToSupply[i] = TypeDescriptor.GetConverter(paramType).ConvertFrom(argText);

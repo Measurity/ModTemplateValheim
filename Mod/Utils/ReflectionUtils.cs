@@ -20,7 +20,7 @@ namespace ModTemplateValheim.Utils
             else
             {
                 getType = Expression.GetFuncType;
-                types = types.Concat(new[] {methodInfo.ReturnType});
+                types = types.Concat(new[] { methodInfo.ReturnType });
             }
 
             if (methodInfo.IsStatic)

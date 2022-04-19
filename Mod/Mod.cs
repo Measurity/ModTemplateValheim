@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using BepInEx;
+﻿using BepInEx;
 using HarmonyLib;
 
 namespace ModTemplateValheim
@@ -11,7 +10,6 @@ namespace ModTemplateValheim
         public const string PluginGuid = "com.github.measurity.modtemplatevalheim";
         public const string PluginName = "ModTemplateValheim";
         public const string PluginVersion = "1.0.0.0";
-
         private static readonly Harmony harmony = new(PluginGuid);
 
         private void Awake()
