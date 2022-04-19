@@ -10,14 +10,14 @@ namespace ModTemplateValheim.Utils
 
         public static IEnumerable<object> ToArray(object obj)
         {
-            var asArray = obj as IEnumerable;
+            IEnumerable asArray = obj as IEnumerable;
             if (asArray == null)
             {
                 if (obj == null)
                 {
                     return Enumerable.Empty<object>();
                 }
-                return new[] {obj};
+                return new[] { obj };
             }
             return asArray.Cast<object>();
         }

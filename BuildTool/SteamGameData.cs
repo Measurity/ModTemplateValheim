@@ -30,10 +30,10 @@ namespace BuildTool
         {
             try
             {
-                var game = new SteamGameData();
-                var xDoc = new XmlDocument();
+                SteamGameData game = new();
+                XmlDocument xDoc = new();
                 xDoc.Load(path);
-                XmlNamespaceManager nsManager = new XmlNamespaceManager(xDoc.NameTable);
+                XmlNamespaceManager nsManager = new(xDoc.NameTable);
                 nsManager.AddNamespace("d", xDoc.DocumentElement.NamespaceURI);
                 foreach (XmlElement elem in xDoc.DocumentElement.SelectNodes("//d:PropertyGroup/*", nsManager))
                 {

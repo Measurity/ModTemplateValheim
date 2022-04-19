@@ -8,8 +8,7 @@ namespace BuildTool
 {
     public static class Utils
     {
-        private static readonly Lazy<string> processDir =
-            new Lazy<string>(() => Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
+        private static readonly Lazy<string> processDir = new(() => Path.GetDirectoryName(Assembly.GetEntryAssembly().Location));
 
         public static string ProcessDir => processDir.Value;
 
@@ -17,21 +16,21 @@ namespace BuildTool
 
         public static int ExecuteShell(string command, string workingDirectory = null)
         {
-            return ExecuteShell(new[] {command}, workingDirectory);
+            return ExecuteShell(new[] { command }, workingDirectory);
         }
-        
+
         public static int ExecuteShell(IEnumerable<string> commands, string workingDirectory = null)
         {
-            var psi = new ProcessStartInfo
+            ProcessStartInfo psi = new()
             {
                 FileName = "cmd.exe",
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 UseShellExecute = false,
-                WorkingDirectory = Directory.Exists(workingDirectory) ? workingDirectory : GeneratedOutputDir,
+                WorkingDirectory = Directory.Exists(workingDirectory) ? workingDirectory : GeneratedOutputDir
             };
-            using var process = new Process
+            using Process process = new()
             {
                 StartInfo = psi
             };
@@ -46,7 +45,7 @@ namespace BuildTool
 #endif
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
-            using (var sw = process.StandardInput)
+            using (StreamWriter sw = process.StandardInput)
             {
                 foreach (var cmd in commands)
                 {
