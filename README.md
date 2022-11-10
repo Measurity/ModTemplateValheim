@@ -13,7 +13,7 @@ Everything required is **automatically installed into Valheim**:
 
 ## Requirements
  - MSBuild 16+ (installed with Visual Studio)
- - If you want modern C# lang support you need https://dotnet.microsoft.com/download/dotnet/6.0 as well. See Directory.Build.props file to change language version.
+ - If you want modern C# lang support you need https://dotnet.microsoft.com/en-us/download as well. See Directory.Build.props file to change language version.
 
 ## Credits
 https://github.com/MrPurple6411 - First to make a proper template. Used the proj dependencies from it as a base.  
