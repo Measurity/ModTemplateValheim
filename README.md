@@ -21,6 +21,8 @@ Everything required is **automatically installed into Valheim**:
    - Run rebuild again (need to do it twice for fresh install)
  - **Code is red - IntelliSense broken**
    - Restart VS (after you've built solution twice)
+ - **Valheim has updated, getting errors**
+   - Remove folder `..\ModTemplateValheim\BuildTool\bin\generated_files` and rebuild solution.
 
 ## Credits
 https://github.com/MrPurple6411 - First to make a proper template. Used their declared project dependencies as a base.  
