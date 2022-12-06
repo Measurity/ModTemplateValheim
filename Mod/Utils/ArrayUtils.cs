@@ -2,29 +2,28 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ModTemplateValheim.Utils
+namespace ModTemplateValheim.Utils;
+
+public static class ArrayUtils
 {
-    public static class ArrayUtils
+    public const string NullString = "<null>";
+
+    public static IEnumerable<object> ToArray(object obj)
     {
-        public const string NullString = "<null>";
-
-        public static IEnumerable<object> ToArray(object obj)
+        IEnumerable asArray = obj as IEnumerable;
+        if (asArray == null)
         {
-            IEnumerable asArray = obj as IEnumerable;
-            if (asArray == null)
+            if (obj == null)
             {
-                if (obj == null)
-                {
-                    return Enumerable.Empty<object>();
-                }
-                return new[] { obj };
+                return Enumerable.Empty<object>();
             }
-            return asArray.Cast<object>();
+            return new[] { obj };
         }
+        return asArray.Cast<object>();
+    }
 
-        public static IEnumerable<string> ToStringArray(object obj)
-        {
-            return ToArray(obj).Select(o => o?.ToString() ?? NullString);
-        }
+    public static IEnumerable<string> ToStringArray(object obj)
+    {
+        return ToArray(obj).Select(o => o?.ToString() ?? NullString);
     }
 }

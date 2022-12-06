@@ -5,125 +5,125 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace BuildTool
+namespace BuildTool;
+
+internal static class Program
 {
-    internal static class Program
+    private static readonly string[] skipZipExtractContains = { "example", "readme", "changelog" };
+
+    private const string BepInExDownloadUrl =
+        "https://valheim.thunderstore.io/package/download/denikson/BepInExPack_Valheim/5.4.1901/";
+
+    private static uint SteamAppId =>
+        !uint.TryParse(Environment.GetEnvironmentVariable("SteamAppId"), out var id) ? 892970 : id;
+
+    private static bool SkipPublicizer =>
+        bool.TryParse(Environment.GetEnvironmentVariable("SkipPublicizer"), out var skip) && skip;
+
+    public static async Task Main(string[] args)
     {
-        private static readonly string[] skipZipExtractContains = { "example", "readme", "changelog" };
+        if (SteamAppId <= 0) throw new Exception("SteamAppId environment variable must be set and be valid");
 
-        private const string BepInExDownloadUrl =
-            "https://valheim.thunderstore.io/package/download/denikson/BepInExPack_Valheim/5.4.1900/";
+        Console.WriteLine($"Building mod for Steam game with id {SteamAppId}");
+        SteamGameData game = await Task.Factory.StartNew(() => EnsureSteamGame(SteamAppId)).ConfigureAwait(false);
+        Console.WriteLine($"Found game at {game.InstallDir}");
+        await Task.WhenAll(
+                Task.Run(() => EnsureBepInExAsync(game.InstallDir)),
+                Task.Run(() => EnsurePublicizedAssemblies(game)))
+            .ConfigureAwait(false);
+    }
 
-
-        private static uint SteamAppId =>
-            !uint.TryParse(Environment.GetEnvironmentVariable("SteamAppId"), out var id) ? 892970 : id;
-
-        private static bool SkipPublicizer =>
-            bool.TryParse(Environment.GetEnvironmentVariable("SkipPublicizer"), out var skip) && skip;
-
-        public static async Task Main(string[] args)
+    private static async Task EnsurePublicizedAssemblies(SteamGameData game)
+    {
+        static void PublicizerOnLogReceived(object sender, string message)
         {
-            if (SteamAppId <= 0) throw new Exception("SteamAppId environment variable must be set and be valid");
-
-            Console.WriteLine($"Building mod for Steam game with id {SteamAppId}");
-            SteamGameData game = await Task.Factory.StartNew(() => EnsureSteamGame(SteamAppId)).ConfigureAwait(false);
-            Console.WriteLine($"Found game at {game.InstallDir}");
-            await Task.WhenAll(
-                    Task.Factory.StartNew(() => EnsureBepInExAsync(game.InstallDir)).Unwrap(),
-                    Task.Factory.StartNew(() => EnsurePublicizedAssemblies(game)))
-                .ConfigureAwait(false);
+            Console.WriteLine(message);
         }
 
-        private static void EnsurePublicizedAssemblies(SteamGameData game)
+        if (SkipPublicizer)
         {
-            if (SkipPublicizer)
-            {
-                Console.WriteLine("Skipping Assembly Publicizer, execute this manually.");
-                return;
-            }
-            if (Directory.Exists(Path.Combine(Utils.GeneratedOutputDir, "publicized_assemblies")))
-            {
-                Console.WriteLine("Assemblies are already publicized.");
-                return;
-            }
-
-            var dllsToPublicize = Directory.GetFiles(game.ManagedDllsDir, "assembly_*.dll");
-            foreach (var publicizedDll in Publicizer.Execute(dllsToPublicize,
-                         "_publicized",
-                         Path.Combine(Utils.GeneratedOutputDir, "publicized_assemblies")))
-            {
-                Console.WriteLine($"Wrote publicized dll: {publicizedDll}");
-            }
+            Console.WriteLine("Skipping Assembly Publicizer, execute this manually.");
+            return;
+        }
+        if (Directory.Exists(Path.Combine(Utils.GeneratedOutputDir, "publicized_assemblies")))
+        {
+            Console.WriteLine("Assemblies are already publicized.");
+            return;
         }
 
-        private static SteamGameData EnsureSteamGame(uint steamAppId)
+        var dllsToPublicize = Directory.GetFiles(game.ManagedDllsDir, "assembly_*.dll");
+        Publicizer.LogReceived += PublicizerOnLogReceived;
+        await Publicizer.PublicizeAsync(dllsToPublicize, "_publicized", Path.Combine(Utils.GeneratedOutputDir, "publicized_assemblies"));
+        Publicizer.LogReceived -= PublicizerOnLogReceived;
+    }
+
+    private static SteamGameData EnsureSteamGame(uint steamAppId)
+    {
+        static string ValidateUnityGame(SteamGameData game, uint steamAppId)
         {
-            static string ValidateUnityGame(SteamGameData game, uint steamAppId)
+            if (game.Id != steamAppId)
             {
-                if (game.Id != steamAppId)
-                {
-                    return $"Steam id in game.props {game.Id} does not match {steamAppId}";
-                }
-                if (!File.Exists(Path.Combine(game.InstallDir, "UnityPlayer.dll")))
-                {
-                    return "Steam game is not a Unity game.";
-                }
-                if (!Directory.Exists(game.ManagedDllsDir))
-                {
-                    throw new Exception("Game is missing Unity managed dlls directory.");
-                }
-                return null;
+                return $"Steam id in game.props {game.Id} does not match {steamAppId}";
             }
-
-            var cacheFile = Path.Combine(Utils.GeneratedOutputDir, "game.props");
-            SteamGameData game = SteamGameData.TryFrom(cacheFile);
-            if (game == null || ValidateUnityGame(game, steamAppId) != null)
+            if (!File.Exists(Path.Combine(game.InstallDir, "UnityPlayer.dll")))
             {
-                game = Steam.FindGame(steamAppId);
+                return "Steam game is not a Unity game.";
             }
-
-            var error = ValidateUnityGame(game, steamAppId);
-            if (error != null)
+            if (!Directory.Exists(game.ManagedDllsDir))
             {
-                throw new Exception(error);
+                throw new Exception("Game is missing Unity managed dlls directory.");
             }
-
-            game.TrySave(cacheFile);
-            return game;
+            return null;
         }
 
-        private static async Task EnsureBepInExAsync(string gameDir)
+        var cacheFile = Path.Combine(Utils.GeneratedOutputDir, "game.props");
+        SteamGameData game = SteamGameData.TryFrom(cacheFile);
+        if (game == null || ValidateUnityGame(game, steamAppId) != null)
         {
-            if (File.Exists(Path.Combine(Utils.GeneratedOutputDir, "bepinex.zip")) && File.Exists(Path.Combine(gameDir, "BepInEx", "core", "BepInEx.dll")))
-            {
-                Console.WriteLine("BepInEx is already installed.");
-                return;
-            }
+            game = Steam.FindGame(steamAppId);
+        }
 
-            var zip = Path.Combine(Utils.GeneratedOutputDir, "bepinex.zip");
-            if (!File.Exists(zip))
-            {
-                using WebClient client = new();
-                await client.DownloadFileTaskAsync(BepInExDownloadUrl, zip);
-            }
-            // Extract BepInEx zip over game files.
-            using ZipArchive zipReader = ZipFile.OpenRead(zip);
-            foreach (ZipArchiveEntry entry in zipReader.Entries)
-            {
-                if (skipZipExtractContains.Any(
-                        name => entry.FullName.IndexOf(name, StringComparison.InvariantCultureIgnoreCase) >= 0)) continue;
-                var isFolder = entry.FullName.EndsWith("/");
-                var targetFile = Path.Combine(gameDir, entry.FullName.Replace("BepInExPack_Valheim/", ""));
+        var error = ValidateUnityGame(game, steamAppId);
+        if (error != null)
+        {
+            throw new Exception(error);
+        }
 
-                if (isFolder)
-                {
-                    Directory.CreateDirectory(targetFile);
-                }
-                else
-                {
-                    Directory.CreateDirectory(Path.GetDirectoryName(targetFile));
-                    entry.ExtractToFile(targetFile, true);
-                }
+        game.TrySave(cacheFile);
+        return game;
+    }
+
+    private static async Task EnsureBepInExAsync(string gameDir)
+    {
+        if (File.Exists(Path.Combine(Utils.GeneratedOutputDir, "bepinex.zip")) && File.Exists(Path.Combine(gameDir, "BepInEx", "core", "BepInEx.dll")))
+        {
+            Console.WriteLine("BepInEx is already installed.");
+            return;
+        }
+
+        var zip = Path.Combine(Utils.GeneratedOutputDir, "bepinex.zip");
+        if (!File.Exists(zip))
+        {
+            using WebClient client = new();
+            await client.DownloadFileTaskAsync(BepInExDownloadUrl, zip);
+        }
+        // Extract BepInEx zip over game files.
+        using ZipArchive zipReader = ZipFile.OpenRead(zip);
+        foreach (ZipArchiveEntry entry in zipReader.Entries)
+        {
+            if (skipZipExtractContains.Any(
+                    name => entry.FullName.IndexOf(name, StringComparison.InvariantCultureIgnoreCase) >= 0)) continue;
+            var isFolder = entry.FullName.EndsWith("/");
+            var targetFile = Path.Combine(gameDir, entry.FullName.Replace("BepInExPack_Valheim/", ""));
+
+            if (isFolder)
+            {
+                Directory.CreateDirectory(targetFile);
+            }
+            else
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(targetFile));
+                entry.ExtractToFile(targetFile, true);
             }
         }
     }

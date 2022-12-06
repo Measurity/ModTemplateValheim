@@ -1,25 +1,17 @@
 ﻿using BepInEx;
-using HarmonyLib;
 
-namespace ModTemplateValheim
+namespace ModTemplateValheim;
+
+public partial class Mod : BaseUnityPlugin
 {
-    [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
-    public class Mod : BaseUnityPlugin
+    private void Awake()
     {
-        public const string PluginAuthor = "Measurity";
-        public const string PluginGuid = "com.github.measurity.modtemplatevalheim";
-        public const string PluginName = "ModTemplateValheim";
-        public const string PluginVersion = "1.0.0.0";
-        private static readonly Harmony harmony = new(PluginGuid);
+        // Add or change your patches in "Patches" folder.
+        harmony.PatchAll();
+    }
 
-        private void Awake()
-        {
-            harmony.PatchAll();
-        }
-
-        private void OnDestroy()
-        {
-            harmony.UnpatchSelf();
-        }
+    private void OnDestroy()
+    {
+        harmony.UnpatchSelf();
     }
 }

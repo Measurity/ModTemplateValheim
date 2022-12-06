@@ -78,7 +78,7 @@ namespace BuildTool
 
         private static SteamGameData GameDataFromAppManifest(string manifestFile)
         {
-            Dictionary<string, string> gameData = null;
+            Dictionary<string, string> gameData;
             try
             {
                 gameData = JsonAsDictionary(File.ReadAllText(manifestFile));
@@ -102,10 +102,13 @@ namespace BuildTool
 
         private static Dictionary<string, string> JsonAsDictionary(string json)
         {
-            Regex regex = new("\"(.*)\"\t*\"(.*)\"", RegexOptions.Compiled);
-            return regex.Matches(json)
-                .Cast<Match>()
-                .ToDictionary(m => m.Groups[1].Value.ToLowerInvariant(), m => m.Groups[2].Value);
+            Regex regex = new("\"(.*)\"\t*\"(.*)\"");
+            Dictionary<string, string> result = new();
+            foreach (Match match in regex.Matches(json).Cast<Match>())
+            {
+                result[match.Groups[1].Value.ToLowerInvariant()] = match.Groups[2].Value;
+            }
+            return result;
         }
 
         private static string[] GetLibraryPaths(string json)

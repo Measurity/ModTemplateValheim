@@ -6,15 +6,22 @@ Everything required is **automatically installed into Valheim**:
  - Moves your mod into the BepInEx plugins folder.
 
 ## How to use template
- - Rebuild solution **twice**: PLAY!
- - Rename the ModTemplateValheim.sln to rename mod. Things not yet automatically renamed:
-   - Code namespaces
-   - The BepInPugin attribute on Mod.cs.
+1. (optional) Rename the .sln file to rename the mod automatically.
+   1. Change mod metadata in AssemblyInfo.cs.
+   2. Rename code namespace in .cs files
+2. Rebuild solution **twice**: PLAY!
+3. Remove the code in the `Mod.Patches` folder and write your own mod :)
 
 ## Requirements
  - MSBuild 16+ (installed with Visual Studio)
  - If you want modern C# lang support you need https://dotnet.microsoft.com/en-us/download as well. See Directory.Build.props file to change language version.
 
+## Troubleshooting
+ - **Missing dependencies**
+   - Run rebuild again (need to do it twice for fresh install)
+ - **Code is red - IntelliSense broken**
+   - Restart VS (after you've built solution twice)
+
 ## Credits
-https://github.com/MrPurple6411 - First to make a proper template. Used the proj dependencies from it as a base.  
-https://github.com/sebastienvercammen - Providing help with overriding game dlls with unstripped dlls through UnityDoorstop.
+https://github.com/MrPurple6411 - First to make a proper template. Used their declared project dependencies as a base.  
+https://github.com/sebastienvercammen - Providing help with overriding game DLLs with unstripped dlls through UnityDoorstop.
