@@ -1,6 +1,6 @@
 ﻿using BepInEx;
 
-namespace ModTemplateValheim;
+namespace ExampleCallMethodMod;
 
 public partial class Mod : BaseUnityPlugin
 {

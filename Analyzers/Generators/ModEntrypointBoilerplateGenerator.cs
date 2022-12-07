@@ -112,11 +112,9 @@ public partial class {modClass.Name}
         {
             object? newValue = c switch
             {
-                ' ' => null,
-                '-' => null,
-                '_' => null,
-                '.' => null,
-                _ => c
+                >= 'a' and <= 'z' => c,
+                >= 'A' and <= 'Z' => c,
+                _ => null
             };
             if (newValue != null)
             {

@@ -3,10 +3,10 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using ExampleCallMethodMod.Utils;
 using HarmonyLib;
-using ModTemplateValheim.Utils;
 
-namespace ModTemplateValheim.Patches;
+namespace ExampleCallMethodMod.Patches;
 
 public static class ConsolePatch
 {

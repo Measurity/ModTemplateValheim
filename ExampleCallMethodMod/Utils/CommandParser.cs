@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace ModTemplateValheim.Utils;
+namespace ExampleCallMethodMod.Utils;
 
 /// <summary>
 ///     Example command parser. Can be removed.
