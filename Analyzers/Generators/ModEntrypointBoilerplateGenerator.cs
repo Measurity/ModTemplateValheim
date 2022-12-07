@@ -32,7 +32,7 @@ public class ModMetadataGenerator : IIncrementalGenerator
             return;
         }
 
-        (string author, string modName, string version) = ExtractMetadataFromAssembly(compilation.Assembly);
+        (string[] authors, string modName, string version) = ExtractMetadataFromAssembly(compilation.Assembly);
         foreach (ITypeSymbol modClass in modClasses)
         {
             string sourceFileName = modClass.ContainingNamespace.IsGlobalNamespace ? $"{modClass.Name}.g.cs" : $"{modClass.ContainingNamespace}.{modClass.Name}.g.cs";
@@ -44,9 +44,9 @@ using HarmonyLib;
 [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
 public partial class {modClass.Name}
 {{
-    public const string PluginAuthor = ""{author}"";
-    public const string PluginGuid = ""com.github.{CleanupName(author).ToLowerInvariant()}.{CleanupName(modName).ToLowerInvariant()}"";
-    public const string PluginName = ""{modName}"";
+    public const string PluginAuthor = ""{string.Join(" & ", authors)}"";
+    public const string PluginGuid = ""com.github.{CleanupName(authors.FirstOrDefault() ?? modName).ToLowerInvariant()}.{CleanupName(modName)}"";
+    public const string PluginName = ""{modName.Trim()}"";
     public const string PluginVersion = ""{version}"";
 }}
 ");
@@ -84,7 +84,7 @@ public partial class {modClass.Name}
         return classTypeSymbol;
     }
 
-    private static (string author, string modName, string version) ExtractMetadataFromAssembly(IAssemblySymbol assembly)
+    private static (string[] authors, string modName, string version) ExtractMetadataFromAssembly(IAssemblySymbol assembly)
     {
         var author = "";
         var version = "1.0.0.0";
@@ -104,16 +104,18 @@ public partial class {modClass.Name}
                     break;
             }
         }
-        return (author, modName, version);
+        return (author.Split(';'), modName, version);
     }
     
     private static string CleanupName(string name)
     {
         StringBuilder sb = new();
-        foreach (char c in name)
+        for (int i = 0; i < name.Length; i++)
         {
+            char c = name[i];
             object? newValue = c switch
             {
+                >= '0' and <= '9' when sb.Length > 1 => c, // Skip numbers if they're at the start.
                 >= 'a' and <= 'z' => c,
                 >= 'A' and <= 'Z' => c,
                 _ => null

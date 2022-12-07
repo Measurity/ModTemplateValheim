@@ -27,7 +27,7 @@ Any project in this solution that ends with `Mod` will automatically install its
 ## I want to..
 
 - **Rename my mod**  
-  Add (or change) the `AssemblyName` property to the mod's .csproj file. Note that previous mods won't be uninstalled automatically. Example:
+  Add (or change) the `AssemblyName` property to the mod's .csproj file. Note to remove the old mod DLL from BepInEx plugins folder in Valheim. Example:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
@@ -35,14 +35,23 @@ Any project in this solution that ends with `Mod` will automatically install its
     </PropertyGroup>
 </Project>
 ```
-- **Change mod author**  
-  Add (or change) the `Company` property to the mod's .csproj file. Example:
+- **Change mod author or version**  
+  Add (or change) the `Authors` property to the mod's .csproj file. Example:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <Company>It's me</Company>
+        <Authors>Measurity;geocine;eai04191</Authors>
+        <AssemblyName>My cool mod - the second</AssemblyName>
+        <Version>1.0.0.1</Version>
     </PropertyGroup>
 </Project>
+```
+Which will generate the BepInEx plugin metadata as:
+```cs
+public const string PluginAuthor = "Measurity & geocine & eai04191";
+public const string PluginGuid = "com.github.measurity.Mycoolmodthesecond";
+public const string PluginName = "My cool mod - the second";
+public const string PluginVersion = "1.0.0.1";
 ```
 
 ## Credits
