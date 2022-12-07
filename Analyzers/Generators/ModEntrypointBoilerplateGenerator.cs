@@ -32,26 +32,7 @@ public class ModMetadataGenerator : IIncrementalGenerator
             return;
         }
 
-        // Extract metadata from mod assembly.
-        var author = "";
-        var version = "1.0.0.0";
-        var modName = "";
-        foreach (AttributeData attribute in compilation.Assembly.GetAttributes())
-        {
-            switch (attribute.AttributeClass?.Name)
-            {
-                case "AssemblyTitleAttribute":
-                    modName = attribute.ConstructorArguments.FirstOrDefault().Value?.ToString() ?? "";
-                    break;
-                case "AssemblyCompanyAttribute":
-                    author = attribute.ConstructorArguments.FirstOrDefault().Value?.ToString() ?? "";
-                    break;
-                case "AssemblyVersionAttribute":
-                    version = attribute.ConstructorArguments.FirstOrDefault().Value?.ToString() ?? "1.0.0.0";
-                    break;
-            }
-        }
-
+        (string author, string modName, string version) = ExtractMetadataFromAssembly(compilation.Assembly);
         foreach (ITypeSymbol modClass in modClasses)
         {
             string sourceFileName = modClass.ContainingNamespace.IsGlobalNamespace ? $"{modClass.Name}.g.cs" : $"{modClass.ContainingNamespace}.{modClass.Name}.g.cs";
@@ -63,8 +44,6 @@ using HarmonyLib;
 [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
 public partial class {modClass.Name}
 {{
-    private static readonly Harmony harmony = new(PluginGuid);
-
     public const string PluginAuthor = ""{author}"";
     public const string PluginGuid = ""com.github.{CleanupName(author).ToLowerInvariant()}.{CleanupName(modName).ToLowerInvariant()}"";
     public const string PluginName = ""{modName}"";
@@ -105,6 +84,29 @@ public partial class {modClass.Name}
         return classTypeSymbol;
     }
 
+    private static (string author, string modName, string version) ExtractMetadataFromAssembly(IAssemblySymbol assembly)
+    {
+        var author = "";
+        var version = "1.0.0.0";
+        var modName = "";
+        foreach (AttributeData attribute in assembly.GetAttributes())
+        {
+            switch (attribute.AttributeClass?.Name)
+            {
+                case "AssemblyTitleAttribute":
+                    modName = attribute.ConstructorArguments.FirstOrDefault().Value?.ToString() ?? "";
+                    break;
+                case "AssemblyCompanyAttribute":
+                    author = attribute.ConstructorArguments.FirstOrDefault().Value?.ToString() ?? "";
+                    break;
+                case "AssemblyVersionAttribute":
+                    version = attribute.ConstructorArguments.FirstOrDefault().Value?.ToString() ?? "1.0.0.0";
+                    break;
+            }
+        }
+        return (author, modName, version);
+    }
+    
     private static string CleanupName(string name)
     {
         StringBuilder sb = new();
