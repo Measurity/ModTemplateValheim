@@ -6,8 +6,9 @@ Everything required is **automatically installed into Valheim**:
  - Moves your mod into the BepInEx plugins folder.
 
 ## How to use template
-1. (optional) Rename the `ExampleCallMethodMod.csproj` to your mod name. 
-2. Rebuild solution **twice**: PLAY!
+1. Download or clone this repository then open in Visual Studio or JetBrains Rider.
+2. (optional) Rename the `ExampleCallMethodMod.csproj` to your mod name. 
+3. Rebuild solution **twice**: PLAY!
 
 Any project in this solution that ends with `Mod` will automatically install itself into Valheim and reference the game code.
 
