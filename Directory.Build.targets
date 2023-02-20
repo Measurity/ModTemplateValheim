@@ -10,10 +10,11 @@
             <ModDlls Include="$(OutputPath)*.dll" />
         </ItemGroup>
         <Copy SourceFiles="@(ModDlls)" DestinationFolder="$(GameDir)BepInEx\plugins\$(AssemblyName)\" />
+        <Message Importance="high" Text="Copied mod DLLs of '$(AssemblyName)' to: $(GameDir)BepInEx\plugins\$(AssemblyName)" />
     </Target>
     <!-- Include generated build properties -->
     <Import Project="$(BuildGenDir)game.props" Condition="'$(ModProject)' == 'true' and Exists('$(BuildGenDir)game.props')" />
-    
+
     <Choose>
         <When Condition="'$(ModProject)' == 'true'">
             <ItemGroup>
