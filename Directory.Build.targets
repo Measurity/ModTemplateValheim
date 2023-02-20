@@ -1,8 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <!-- Run build tool on build -->
+    <!-- Run build tool on build and the include generated build properties -->
     <Target Name="BeforeResolveReferences" Condition="'$(ModProject)' == 'true'">
         <Exec LogStandardErrorAsError="true" Command="$(BuildDir)BuildTool.exe" EnvironmentVariables="SteamAppId=892970" />
+    </Target>
+    <Import Project="$(BuildGenDir)game.props" Condition="'$(ModProject)' == 'true' and Exists('$(BuildGenDir)game.props')" />
+
+    <!-- Delete mod if running "clean" target -->
+    <Target Name="DeleteMod" AfterTargets="Clean" DependsOnTargets="Clean" Condition="'$(ModProject)' == 'true'">
+        <RemoveDir Directories="$(GameDir)BepInEx\plugins\$(AssemblyName)" />
+        <Message Text="Removed mod folder at: $(GameDir)BepInEx\plugins\$(AssemblyName)" Importance="high" />
     </Target>
     <!-- Copy mod to BepInEx "plugins" directory -->
     <Target Name="InstallMod" AfterTargets="Build" Condition="'$(ModProject)' == 'true'">
@@ -12,8 +19,6 @@
         <Copy SourceFiles="@(ModDlls)" DestinationFolder="$(GameDir)BepInEx\plugins\$(AssemblyName)\" />
         <Message Importance="high" Text="Copied mod DLLs of '$(AssemblyName)' to: $(GameDir)BepInEx\plugins\$(AssemblyName)" />
     </Target>
-    <!-- Include generated build properties -->
-    <Import Project="$(BuildGenDir)game.props" Condition="'$(ModProject)' == 'true' and Exists('$(BuildGenDir)game.props')" />
 
     <Choose>
         <When Condition="'$(ModProject)' == 'true'">

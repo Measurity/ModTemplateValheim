@@ -27,7 +27,7 @@ Any project in this solution that ends with `Mod` will automatically install its
 ## I want to..
 
 - **Rename my mod**  
-  Add (or change) the `AssemblyName` property to the mod's .csproj file. Note to remove the old mod DLL from BepInEx plugins folder in Valheim. Example:
+  Add (or change) the `AssemblyName` property to the mod's .csproj file. Note to run `clean` on this solution beforehand to uninstall your mods. Example:
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
