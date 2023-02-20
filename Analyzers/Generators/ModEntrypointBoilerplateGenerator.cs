@@ -18,7 +18,7 @@ public class ModMetadataGenerator : IIncrementalGenerator
     {
         // Setup pipeline that targets BepInEx mod classes.
         IncrementalValuesProvider<ITypeSymbol> modEntrypoints = context.SyntaxProvider
-            .CreateSyntaxProvider(static (node, _) => SupportedModClassFilter(node), static (syntaxContext, _) => TransformAsBepinexEntrypoint(syntaxContext))
+            .CreateSyntaxProvider(static (node, _) => IsPartialClass(node), static (syntaxContext, _) => TransformAsBepinexEntrypoint(syntaxContext))
             .Where(i => i != null)!;
         IncrementalValueProvider<(Compilation Compilation, ImmutableArray<ITypeSymbol> Nodes)> compilationAndClasses =
             context.CompilationProvider.Combine(modEntrypoints.Collect());
@@ -53,7 +53,7 @@ public partial class {modClass.Name}
         }
     }
 
-    private static bool SupportedModClassFilter(SyntaxNode node)
+    private static bool IsPartialClass(SyntaxNode node)
     {
         if (node is not ClassDeclarationSyntax clazz)
         {
@@ -106,13 +106,12 @@ public partial class {modClass.Name}
         }
         return (author.Split(';'), modName, version);
     }
-    
+
     private static string CleanupName(string name)
     {
         StringBuilder sb = new();
-        for (int i = 0; i < name.Length; i++)
+        foreach (var c in name)
         {
-            char c = name[i];
             object? newValue = c switch
             {
                 >= '0' and <= '9' when sb.Length > 1 => c, // Skip numbers if they're at the start.
