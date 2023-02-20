@@ -13,7 +13,7 @@ Everything required is **automatically installed into Valheim**:
 Any project in this solution that ends with `Mod` will automatically install itself into Valheim and reference the game code.
 
 ## Requirements
- - MSBuild 16+ (installed with Visual Studio)
+ - [MSBuild 16+](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2022) (also installed with Visual Studio)
  - If you want modern C# lang support you need https://dotnet.microsoft.com/en-us/download as well. See Directory.Build.props file to change language version.
 
 ## Troubleshooting
