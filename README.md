@@ -7,8 +7,10 @@ Everything required is **automatically installed into Valheim**:
 
 ## How to use template
 1. Download or clone this repository then open in Visual Studio or JetBrains Rider.
-2. (optional) Rename the `ExampleCallMethodMod.csproj` to your mod name. 
-3. Rebuild solution **twice**: PLAY!
+2. (optional) Rename the `ExampleCallMethodMod.csproj` to your mod name.
+3. Rebuild the solution.
+4. If there are errors, restart your IDE.
+5. Play Valheim to test your mod!
 
 Any project in this solution that ends with `Mod` will automatically install itself into Valheim and reference the game code.
 
@@ -18,11 +20,9 @@ Any project in this solution that ends with `Mod` will automatically install its
 
 ## Troubleshooting
  - **Missing dependencies**
-   - Run rebuild again (need to do it twice for fresh install)
+   - Run rebuild again
  - **Code is red - IntelliSense broken**
-   - Restart VS (after you've built solution twice)
- - **Valheim has updated, getting errors**
-   - Remove folder `..\ModTemplateValheim\BuildTool\bin\generated_files` and rebuild solution.
+   - Restart your IDE
 
 ## I want to..
 
@@ -56,4 +56,7 @@ public const string PluginVersion = "1.0.0.1";
 
 ## Credits
 https://github.com/MrPurple6411 - First to make a proper template. Used their declared project dependencies as a base.  
-https://github.com/sebastienvercammen - Providing help with overriding game DLLs with unstripped dlls through UnityDoorstop.
+https://github.com/sebastienvercammen - Providing help with overriding game DLLs with unstripped DLLs through UnityDoorstop.  
+https://github.com/js6pak - Primary author of BepInEx.AssemblyPublicizer.MSBuild which was a big help in figuring out MSBuild tasks.
+
+And thanks to all contributors!

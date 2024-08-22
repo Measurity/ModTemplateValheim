@@ -1,7 +1,5 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BuildTool", "BuildTool\BuildTool.csproj", "{2080BD2A-A6F1-4A0E-BD81-CA58DC667417}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExampleCallMethodMod", "ExampleCallMethodMod\ExampleCallMethodMod.csproj", "{3B95EEF7-4A97-4393-91A0-3626434F3631}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{FEF26A41-3A1C-4F98-AF14-9D30E2E3F35A}"
@@ -9,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		Directory.Build.props = Directory.Build.props
 		README.md = README.md
 		Directory.Build.targets = Directory.Build.targets
+		.gitignore = .gitignore
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Analyzers", "Analyzers\Analyzers.csproj", "{516DA37E-BADB-463E-A094-E29478203E35}"
@@ -19,10 +18,6 @@ Global
 		Debug|Any CPU = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{2080BD2A-A6F1-4A0E-BD81-CA58DC667417}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2080BD2A-A6F1-4A0E-BD81-CA58DC667417}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2080BD2A-A6F1-4A0E-BD81-CA58DC667417}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2080BD2A-A6F1-4A0E-BD81-CA58DC667417}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3B95EEF7-4A97-4393-91A0-3626434F3631}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{3B95EEF7-4A97-4393-91A0-3626434F3631}.Release|Any CPU.Build.0 = Debug|Any CPU
 		{3B95EEF7-4A97-4393-91A0-3626434F3631}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
