@@ -17,15 +17,15 @@ public class ModMetadataGenerator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Setup pipeline that targets BepInEx mod classes.
-        IncrementalValuesProvider<ITypeSymbol> modEntrypoints = context.SyntaxProvider
+        IncrementalValuesProvider<BepInExModData> modEntrypoints = context.SyntaxProvider
             .CreateSyntaxProvider(static (node, _) => IsPartialClass(node), static (syntaxContext, _) => TransformAsBepinexEntrypoint(syntaxContext))
             .Where(i => i != null)!;
-        IncrementalValueProvider<(Compilation Compilation, ImmutableArray<ITypeSymbol> Nodes)> compilationAndClasses =
+        IncrementalValueProvider<(Compilation Compilation, ImmutableArray<BepInExModData> Nodes)> compilationAndClasses =
             context.CompilationProvider.Combine(modEntrypoints.Collect());
         context.RegisterSourceOutput(compilationAndClasses, static (context, source) => Execute(context, source.Compilation, source.Nodes));
     }
 
-    private static void Execute(SourceProductionContext context, Compilation compilation, ImmutableArray<ITypeSymbol> modClasses)
+    private static void Execute(SourceProductionContext context, Compilation compilation, ImmutableArray<BepInExModData> modClasses)
     {
         if (modClasses.IsDefaultOrEmpty)
         {
@@ -33,16 +33,16 @@ public class ModMetadataGenerator : IIncrementalGenerator
         }
 
         (string[] authors, string modName, string version) = ExtractMetadataFromAssembly(compilation.Assembly);
-        foreach (ITypeSymbol modClass in modClasses)
+        foreach (BepInExModData modData in modClasses)
         {
-            string sourceFileName = modClass.ContainingNamespace.IsGlobalNamespace ? $"{modClass.Name}.g.cs" : $"{modClass.ContainingNamespace}.{modClass.Name}.g.cs";
+            string sourceFileName = modData.IsGlobalNamespace ? $"{modData.ClassName}.g.cs" : $"{modData.ContainingNamespace}.{modData.ClassName}.g.cs";
             context.AddSource(sourceFileName, $@"
 using BepInEx;
 using HarmonyLib;
 
-{(modClass.ContainingNamespace.IsGlobalNamespace ? "" : $"namespace {modClass.ContainingNamespace};{Environment.NewLine}")}
+{(modData.IsGlobalNamespace ? "" : $"namespace {modData.ContainingNamespace};{Environment.NewLine}")}
 [BepInPlugin(PluginGuid, PluginName, PluginVersion)]
-public partial class {modClass.Name}
+public partial class {modData.ClassName}
 {{
     public const string PluginAuthor = ""{string.Join(" & ", authors)}"";
     public const string PluginGuid = ""com.github.{CleanupName(authors.FirstOrDefault() ?? modName).ToLowerInvariant()}.{CleanupName(modName)}"";
@@ -69,7 +69,7 @@ public partial class {modClass.Name}
         return false;
     }
 
-    private static ITypeSymbol? TransformAsBepinexEntrypoint(GeneratorSyntaxContext context)
+    private static BepInExModData? TransformAsBepinexEntrypoint(GeneratorSyntaxContext context)
     {
         ClassDeclarationSyntax modClass = (ClassDeclarationSyntax)context.Node;
         if (ModelExtensions.GetDeclaredSymbol(context.SemanticModel, modClass) is not ITypeSymbol classTypeSymbol)
@@ -81,7 +81,12 @@ public partial class {modClass.Name}
             return null;
         }
 
-        return classTypeSymbol;
+        return new BepInExModData
+        {
+            ClassName = classTypeSymbol.Name,
+            ContainingNamespace = classTypeSymbol.ContainingNamespace.ToString(),
+            IsGlobalNamespace = classTypeSymbol.ContainingNamespace.IsGlobalNamespace
+        };
     }
 
     private static (string[] authors, string modName, string version) ExtractMetadataFromAssembly(IAssemblySymbol assembly)
@@ -125,5 +130,12 @@ public partial class {modClass.Name}
             }
         }
         return sb.ToString();
+    }
+
+    public record BepInExModData
+    {
+        public bool IsGlobalNamespace { get; set; }
+        public string ClassName { get; set; } = "";
+        public string ContainingNamespace { get; set; } = "";
     }
 }
