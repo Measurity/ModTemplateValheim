@@ -8,12 +8,25 @@ using HarmonyLib;
 
 namespace ExampleCallMethodMod.Patches;
 
+/// <summary>
+///     TODO: Remove this patch and write your mod :)
+///     Example harmony Prefix patch for in-game console input.
+/// </summary>
 public static class ConsolePatch
 {
     /// <summary>
-    ///     TODO: Remove this patch and write your mod :)
-    ///     Example harmony Prefix patch for in-game console input.
+    ///     Press F5 to show in-game console.
     /// </summary>
+    [HarmonyPatch(typeof(Console), nameof(Console.IsConsoleEnabled))]
+    public static class ConsoleEnabled
+    {
+        public static bool Prefix(ref bool __result)
+        {
+            __result = true; // Change console to always be on
+            return false; // false = ignore original code
+        }
+    }
+
     [HarmonyPatch(typeof(Terminal), nameof(Terminal.InputText))]
     public static class InputText
     {
