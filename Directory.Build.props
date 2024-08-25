@@ -23,7 +23,7 @@
             <IncludeAssets>build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
         <!-- Package to find Valheim installation. See "DiscoverGame" task. -->
-        <PackageReference Include="Nitrox.Discovery.MSBuild" Version="0.0.3">
+        <PackageReference Include="Nitrox.Discovery.MSBuild" Version="0.0.4">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
