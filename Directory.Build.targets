@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <!-- Find where Valheim is -->
-    <Target Name="FindGameOnMachine" BeforeTargets="ResolveAssemblyReferences" Condition="'$(ModProject)' == 'true'">
+    <Target Name="FindGameOnMachine" BeforeTargets="ResolveAssemblyReferences" Condition="'$(_NitroxDiscovery_TaskAssembly)' != '' and '$(ModProject)' == 'true'">
         <DiscoverGame GameName="$(GameName)" IntermediateOutputPath="$(IntermediateOutputPath)">
             <Output TaskParameter="GamePath" PropertyName="GameDir" />
         </DiscoverGame>
