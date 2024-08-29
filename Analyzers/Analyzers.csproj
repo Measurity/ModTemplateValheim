@@ -14,12 +14,4 @@
          - No IDE support/squiggles for analyzer reported problems. -->
         <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.1.0" PrivateAssets="all"/>
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="BepInEx\plugins\Analyzers\" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <None Remove="BepInEx\plugins\Analyzers\Analyzers.dll" />
-    </ItemGroup>
 </Project>
